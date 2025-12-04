@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>MAIN on Shandel Studio</title>
+    <link>http://localhost:1313/</link>
+    <description>Recent content in MAIN on Shandel Studio</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en</language>
+    <managingEditor>shandelstudio&#43;info@gmail.com (Shandel Support)</managingEditor>
+    <webMaster>shandelstudio&#43;info@gmail.com (Shandel Support)</webMaster>
+    <copyright>© 2025 Shandel Support</copyright>
+    <lastBuildDate>Sat, 20 Sep 2025 12:42:01 +0330</lastBuildDate><atom:link href="http://localhost:1313/index.xml" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title></title>
+      <link>http://localhost:1313/about/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <author>shandelstudio&#43;info@gmail.com (Shandel Support)</author>
+      <guid>http://localhost:1313/about/</guid>
+      <description></description>
+      
+    </item>
+    
+    <item>
+      <title></title>
+      <link>http://localhost:1313/en/about/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <author>shandelstudio&#43;info@gmail.com (Shandel Support)</author>
+      <guid>http://localhost:1313/en/about/</guid>
+      <description></description>
+      
+    </item>
+    
+  </channel>
+</rss>

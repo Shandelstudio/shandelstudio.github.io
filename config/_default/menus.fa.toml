@@ -1,0 +1,24 @@
+[[main]]
+name = "وبلاگ"
+pageRef = "posts"
+weight = 10
+
+[[main]]
+name = "دسته‌ها"
+pageRef = "categories"
+weight = 20
+
+[[main]]
+name = "برچسب‌ها"
+pageRef = "tags"
+weight = 30
+
+[[footer]]
+name = "برچسب‌ها"
+pageRef = "tags"
+weight = 10
+
+[[footer]]
+name = "دسته‌ها"
+pageRef = "categories"
+weight = 20
