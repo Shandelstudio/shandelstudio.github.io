@@ -1,6 +1,7 @@
 ---
 title: "Privacy Policy – Brick Gigil"
 description: "How Brick Gigil handles user data and privacy"
+date: 2025-12-06
 cascade:
   showEdit: false
   showReadingTime: false
