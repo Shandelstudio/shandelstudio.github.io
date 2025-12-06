@@ -1,6 +1,7 @@
 ---
 title: "Brick Gigil"
 description: "Brick Gigil, Arcade"
+date: 2025-12-06
 cascade:
   showEdit: false
   showReadingTime: false
