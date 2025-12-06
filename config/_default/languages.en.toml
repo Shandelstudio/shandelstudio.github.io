@@ -46,7 +46,7 @@ contentDir = "content"
 #     { keyoxide = "https://keyoxide.org/URI" },
 #     { kickstarter = "https://www.kickstarter.com/profile/username" },
 #     { lastfm = "https://lastfm.com/user/username" },
-    { linkedin = "https://linkedin.com/in/shandelstudio" },
+    { linkedin = "https://linkedin.com/in/shandel-studio" },
 #     { mastodon = "https://mastodon.instance/@username" },
 #     { matrix = "https://matrix.to/#/URI" },
 #     { medium = "https://medium.com/username" },
@@ -71,7 +71,7 @@ contentDir = "content"
 #     { twitter = "https://twitter.com/username" },
     { x-twitter = "https://twitter.com/ShandelStudio" },
 #     { whatsapp = "https://wa.me/phone-number" },
-     { youtube = "https://youtube.com/ShandelStudio" },
+     { youtube = "https://youtube.com/@ShandelStudio" },
 #     { ko-fi = "https://ko-fi.com/username" },
 #     { codeberg = "https://codeberg.org/username"},
   ]
