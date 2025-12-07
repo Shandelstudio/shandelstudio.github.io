@@ -164,7 +164,7 @@ fingerprintAlgorithm = "sha512" # Valid values are "sha512" (default), "sha384",
   globalWidgetPosition = "left"
 
 [verification]
-  # google = ""
+  google = "PPqNK4sq5R33dXU-ciky960Hx5Nj--coELQM4yAdtlU"
   # bing = ""
   # pinterest = ""
   # yandex = ""
