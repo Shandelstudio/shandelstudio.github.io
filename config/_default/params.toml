@@ -157,11 +157,11 @@ fingerprintAlgorithm = "sha512" # Valid values are "sha512" (default), "sha384",
   # enableTrackEvent = true
 
 [buymeacoffee]
-  # identifier = ""
-  # globalWidget = true
-  # globalWidgetMessage = "Hello"
-  # globalWidgetColor = "#FFDD00"
-  # globalWidgetPosition = "Right"
+  identifier = "shandel"
+  globalWidget = true
+  globalWidgetMessage = "Be genorous"
+  globalWidgetColor = "#ff7700ff"
+  globalWidgetPosition = "Right"
 
 [verification]
   # google = ""
