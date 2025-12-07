@@ -36,7 +36,7 @@
   <div class="flex items-center justify-between">
     {{/* Copyright */}}
     {{ if .Site.Params.footer.showCopyright | default true }}
-      <p class="text-sm text-neutral-500 dark:text-neutral-400">
+      <p class="text-sm text-neutral-500 dark:text-neutral-400 text-center w-full">
         {{- with replace .Site.Params.copyright "{ year }" now.Year }}
           {{ . | markdownify }}
         {{- else }}
