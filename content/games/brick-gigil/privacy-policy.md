@@ -1,7 +1,8 @@
 ---
 title: "Privacy Policy – Brick Gigil"
 description: "How Brick Gigil handles user data and privacy"
-date: 2025-12-06
+date: 2025-12-07
+Replay: false
 cascade:
   showEdit: false
   showReadingTime: false
@@ -10,7 +11,7 @@ cascade:
   showViews: false
 ---
 
-**Last updated:** [Date]
+**Last updated:** 2025-12-07
 
 This Privacy Policy explains how **Brick Gigil** (“the Game”, “we”, “us”, or “our”) handles information about you. We are committed to protecting your privacy and designing the Game in a way that respects data protection laws, including the EU/EEA GDPR and US children’s privacy rules such as COPPA.
 
@@ -66,7 +67,7 @@ The only time information may be shared is if you **choose** to send a level sug
 **Important:**  
 
 - The Game itself does **not** send any emails.  
-- Emails are sent from your account to: [Contact Email].  
+- Emails are sent from your account to: [ShandelStudio@gmail.com](mailto:ShandelStudio@gmail.com).  
 - If you send an email, we may see:  
   - The level content and comments  
   - Your email address or any info you include  
@@ -79,7 +80,7 @@ We will only use this to:
 
 We do **not** use this info for advertising, profiling, or selling data. Under GDPR, your consent is the legal basis for any personal data shared.
 
-To request deletion, contact: [Contact Email].
+To request deletion, contact: [ShandelStudio@gmail.com](mailto:ShandelStudio@gmail.com).
 
 ---
 
@@ -93,7 +94,7 @@ To request deletion, contact: [Contact Email].
 
 - If a child sends an email, it may include their address or content.  
 - Parents can supervise or restrict email access.  
-- Deletion requests for such emails can be sent to: [Contact Email].
+- Deletion requests for such emails can be sent to: [ShandelStudio@gmail.com](mailto:ShandelStudio@gmail.com).
 
 ---
 
@@ -110,7 +111,7 @@ If you sent an email containing personal data, your rights include:
 - **Objection:** Object to certain processing.  
 - **Portability:** Request a copy in a usable format.  
 
-Contact: [Contact Email]. Verification may be required.
+Contact: [ShandelStudio@gmail.com](mailto:ShandelStudio@gmail.com). Verification may be required.
 
 ---
 
@@ -153,5 +154,5 @@ Emails are processed only by your email provider and ours, both governed by thei
 
 ## 11. Contact Us
 
-Email: [Contact Email]  
-Developer/Owner: [Developer Name]
+Email: [ShandelStudio@gmail.com](mailto:ShandelStudio@gmail.com)  
+Developers/Owners: Behrooz Shahri Barabadi, Elyas Ebrahimpour
