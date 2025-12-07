@@ -8,11 +8,11 @@ name = "Games"
 pageRef = "games"
 weight = 10
 
-[[main]]
-  name = "Brick Gigil"
-  parent = "Games"
-  pageRef = "brick-gigil"
-  weight = 11
+# [[main]]
+#   name = "Brick Gigil"
+#   parent = "Games"
+#   pageRef = "brick-gigil"
+#   weight = 11
 
 [[main]]
 name = "About us"
