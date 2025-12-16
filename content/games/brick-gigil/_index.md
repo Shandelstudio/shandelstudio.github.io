@@ -41,7 +41,7 @@ Here are a few highlights from the game:
 ![Boss Level Screenshot](images/boss.png)  
 *A simple boss to beat.*
 
-![Special Menu](images/levels.jpg)  
+![Special Menu](images/levels.png)  
 *A special theme.*
 
 ---
