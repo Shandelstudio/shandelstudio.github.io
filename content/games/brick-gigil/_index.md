@@ -35,10 +35,10 @@ Brick Gigil is not your typical brick breaker. With a unique theme and a playful
 
 Here are a few highlights from the game:
 
-![Level Screenshot](images/level1.jpg)  
+![Level Screenshot](images/level1.png)  
 *Level 1 gameplay.*
 
-![Boss Level Screenshot](images/boss.jpg)  
+![Boss Level Screenshot](images/boss.png)  
 *A simple boss to beat.*
 
 ![Special Menu](images/levels.jpg)  
