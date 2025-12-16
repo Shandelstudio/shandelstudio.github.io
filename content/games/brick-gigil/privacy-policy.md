@@ -121,6 +121,6 @@ We recommend reviewing this Privacy Policy occasionally to stay informed about h
 If you have any questions about this Privacy Policy or about Brick Gigil, you can contact us at:
 
 Email: [ShandelStudio@gmail.com](mailto:ShandelStudio@gmail.com)  
-Developers/Owners: Behrooz Shahri Barabadi, Elyas Ebrahimpour
+Owners: Behrooz Shahri Barabadi, Elyas Ebrahimpour
 
 ---
