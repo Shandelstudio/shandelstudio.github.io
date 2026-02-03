@@ -1,34 +1,30 @@
 {{ $id := delimit (slice "tester" (partial "functions/uid.html" .)) "-" }}
 
-<div id="{{ $id }}" class="tester-card-wrapper cursor-pointer max-w-md mx-auto">
-  <a href="mailto:team@example.com?subject=Request%20to%20Join%20Testers%20List&body=Hi%20Team,%0A%0AMy%20name%20is%20%5BYour%20Name%5D%20and%20my%20email%20is%20%5BYour%20Email%5D.%0AI%20would%20like%20to%20join%20the%20testers%20list.%0A%0AThank%20you!"
-     class="block w-full">
-    <div
-      class="w-full p-4 border border-neutral-200 dark:border-neutral-700 rounded-2xl shadow-lg bg-white dark:bg-neutral-900 hover:shadow-xl transition">
-      
-      <!-- Header -->
-      <div class="flex items-center">
-        <span class="text-2xl text-neutral-800 dark:text-neutral-100 mr-3">
-          {{ partial "icon.html" "mail" }}
-        </span>
-        <h3 class="m-0 font-bold text-xl text-neutral-900 dark:text-neutral-100">
-          Join Our Testers List
-        </h3>
-      </div>
+<div id="{{ $id }}" class="tester-card-wrapper max-w-md mx-auto">
+  <div
+    class="w-full p-4 border border-neutral-200 dark:border-neutral-700 rounded-2xl shadow-lg bg-white dark:bg-neutral-900 hover:shadow-xl transition">
+    
+    
+    <div class="flex items-center gap-2">
+      <span class="flex items-center text-2xl w-5 h-5 text-primary-600 dark:text-primary-400 mt-5">
+        {{ partial "icon.html" "email" }}
+      </span>
 
-      <!-- Description -->
-      <p class="m-0 text-neutral-700 dark:text-neutral-300 text-sm ">
-        Click this card to open a pre-filled draft in your email client and join our testers program.
-      </p>
-
-      <!-- Call-to-action button -->
-      <div class="text-center">
-        <span
-          class="inline-block rounded-xl bg-primary-600 hover:bg-primary-500 text-white font-medium px-6 py-2 shadow-sm transition text-sm">
-          Request to Join
-        </span>
-      </div>
-
+      <h3 class="font-bold text-xl text-neutral-900 dark:text-neutral-100 leading-tight">
+        Join Our Testers List
+      </h3>
     </div>
-  </a>
+
+    <p class="text-neutral-700 dark:text-neutral-300 text-sm mt-0 mb-3 leading-snug">
+      Click the button below to open a pre-filled draft in your email client and join our testers program.
+    </p>
+    
+    <div class="text-center">
+      <a href="mailto:shandelstudio@gmail.com?subject=Request%20to%20Join%20Testers%20List&body=Hi%20Team,%0A%0AMy%20name%20is%20%5BYour%20Name%5D%20and%20my%20email%20is%20%5BYour%20Email%5D.%0AI%20would%20like%20to%20join%20the%20testers%20list.%0A%0AThank%20you!"
+         class="inline-block rounded-xl bg-primary-600 hover:bg-primary-500 text-neutral-300 font-medium px-6 py-2 shadow-sm transition text-sm cursor-pointer">
+        Request to Join
+      </a>
+    </div>
+
+  </div>
 </div>
