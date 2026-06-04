@@ -9,5 +9,4 @@ With a focus on community and player engagement, Shandel continuously explores n
 
 {{< download-box
   url="https://play.google.com/store/apps/developer?id=Shandel+Studio"
-  label="Get it on Google Play"
 >}}

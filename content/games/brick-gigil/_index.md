@@ -50,7 +50,6 @@ Here are a few highlights from the game:
 
 {{< download-box
   url="https://play.google.com/store/apps/details?id=com.Shandel.BrickGigil"
-  label="Download Brick Gigil"
 >}}
 
 
