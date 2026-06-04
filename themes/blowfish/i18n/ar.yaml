@@ -24,8 +24,12 @@ article:
   part_of_series: "هذا المقال جزء من سلسلة."
   part: "جزء"
   this_article: "هذه المقالة"
+  related_articles: "مقالات ذات صلة"
+  reply_by_email: "الرد عبر البريد الإلكتروني"
+  reply_to: "رد على {{ .Title }}"
 
 a11y:
+  title: "إعدادات إمكانية الوصول"
   disable_blur: "تعطيل التمويه"
   disable_images: "تعطيل الصور"
   show_link_underline: "إظهار خط تحت الروابط"

@@ -18,6 +18,11 @@ article:
   part: "Part"
   this_article: "This Article"
   related_articles: "Related"
+  reply_by_email: "E-posta ile yanıtla"
+  reply_to: "Yanıt: {{ .Title }}"
+
+a11y:
+  title: "Erişilebilirlik ayarları"
 
 author:
   byline_title: "Yazar"

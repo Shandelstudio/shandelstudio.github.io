@@ -25,8 +25,11 @@ article:
   part: "Част"
   this_article: "Тази Статия"
   related_articles: "Подобни"
+  reply_by_email: "Отговори по имейл"
+  reply_to: "Отговор на {{ .Title }}"
 
 a11y:
+  title: "Настройки за достъпност"
   disable_blur: "Изключване на замъгляването"
   disable_images: "Изключване на изображенията"
   show_link_underline: "Показване на подчертаване на връзките"

@@ -19,8 +19,11 @@ article:
   part: "Del"
   this_article: "Denna artikel"
   related_articles: "Relaterade"
+  reply_by_email: "Svara via email"
+  reply_to: "Svar på {{ .Title }}"
 
 a11y:
+  title: "Tillgänglighetsinställningar"
   disable_blur: "Inaktivera suddighet"
   disable_images: "Inaktivera bilder"
   show_link_underline: "Visa länkunderstrykning"
