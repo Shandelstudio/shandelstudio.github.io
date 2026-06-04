@@ -64,6 +64,7 @@ contentDir = "content"
 #     { stack-overflow = "https://stackoverflow.com/users/userid/username" },
 #     { steam = "https://steamcommunity.com/profiles/userid" },
     { telegram = "https://t.me/ShandelStudio" },
+    { googleplay = "https://play.google.com/store/apps/developer?id=Shandel+Studio" },
     # { threads = "https://www.threads.net/@ShandelStudio" },
     # { tiktok = "https://tiktok.com/@Shandel.Studio" },
 #     { tumblr = "https://username.tumblr.com" },

@@ -46,6 +46,16 @@ Here are a few highlights from the game:
 
 ---
 
-## 4. Privacy Policy
+## 4. Download
 
-For detailed information about data handling and privacy, see our [Privacy Policy](privacy-policy).  
+{{< download-box
+  url="https://play.google.com/store/apps/details?id=com.Shandel.BrickGigil"
+  label="Download Brick Gigil"
+>}}
+
+
+---
+
+## 5. Privacy Policy
+
+For detailed information about data handling and privacy, see our [Privacy Policy](privacy-policy).
