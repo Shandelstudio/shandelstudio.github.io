@@ -20,7 +20,7 @@ contentDir = "content"
   email = "shandelstudio+info@gmail.com"
   image = "img/shandel-logo.png"
   imageQuality = 96
-  headline = "Support Account"
+  headline = ""
   # bio = "A little bit about you"
   links = [
     { email = "mailto:shandelstudio+info@gmail.com" },
@@ -63,7 +63,7 @@ contentDir = "content"
 #     { spotify = "https://open.spotify.com/user/userid" },
 #     { stack-overflow = "https://stackoverflow.com/users/userid/username" },
 #     { steam = "https://steamcommunity.com/profiles/userid" },
-    { telegram = "https://t.me/ShandelStudio" },
+    # { telegram = "https://t.me/ShandelStudio" },
     { googleplay = "https://play.google.com/store/apps/developer?id=Shandel+Studio" },
     # { threads = "https://www.threads.net/@ShandelStudio" },
     # { tiktok = "https://tiktok.com/@Shandel.Studio" },
