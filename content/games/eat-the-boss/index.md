@@ -1,6 +1,10 @@
 ---
 title: "Eat the Boss's shit to promote"
 description: "A browser arcade game: climb 20 corporate floors, survive the managers, and take the boss's chair."
+catalogImage: "screenshots/cash-gameplay.png"
+catalogImageAlt: "The employee catching cash and dodging files in an office"
+catalogPlatform: "Browser"
+catalogSummary: "Climb 20 corporate floors, survive the managers, and claim the boss's chair."
 date: 2026-09-14
 showDate: false
 showAuthor: false

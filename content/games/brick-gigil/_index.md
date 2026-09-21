@@ -1,6 +1,10 @@
 ---
 title: "Brick Gigil"
 description: "Brick Gigil, Arcade"
+catalogImage: "images/level1.png"
+catalogImageAlt: "Brick Gigil gameplay with hand-drawn bricks and a ball above the paddle"
+catalogPlatform: "Android"
+catalogSummary: "A playful brick breaker with hidden rewards, power-ups, and a hand-drawn world."
 date: 2025-12-06
 cascade:
   showEdit: false

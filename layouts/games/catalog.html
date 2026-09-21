@@ -1,0 +1,31 @@
+{{ define "main" }}
+  {{ .Scratch.Set "scope" "list" }}
+  <div class="games-catalog">
+    <header class="games-catalog__header">
+      <h1 class="mt-5 text-4xl font-extrabold text-neutral-900 dark:text-neutral">{{ .Title }}</h1>
+      <p>{{ .Description }}</p>
+    </header>
+    <section class="games-catalog__grid" aria-label="All games">
+      {{ range .Pages.ByTitle }}
+        {{ $game := . }}
+        <article class="games-catalog__card">
+          <a class="games-catalog__link" href="{{ .RelPermalink }}" aria-label="View {{ .Title }}">
+            <div class="games-catalog__image">
+              {{ with .Resources.GetMatch .Params.catalogImage }}
+                {{ $preview := .Resize "360x webp q85" }}
+                <img src="{{ $preview.RelPermalink }}" alt="{{ $game.Params.catalogImageAlt }}" width="{{ $preview.Width }}" height="{{ $preview.Height }}" decoding="async">
+              {{ end }}
+            </div>
+            <div class="games-catalog__body">
+              <p class="games-catalog__platform">Arcade <span aria-hidden="true">·</span> {{ .Params.catalogPlatform }}</p>
+              <h2>{{ .Title }}</h2>
+              <p class="games-catalog__summary">{{ .Params.catalogSummary | default .Description }}</p>
+              <span class="games-catalog__action">View game <span aria-hidden="true">→</span></span>
+            </div>
+          </a>
+        </article>
+      {{ end }}
+    </section>
+    <div class="games-catalog__after prose dark:prose-invert max-w-full">{{ .Content }}</div>
+  </div>
+{{ end }}

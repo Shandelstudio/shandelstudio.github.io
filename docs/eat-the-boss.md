@@ -21,4 +21,4 @@ Run the regression tests with Node.js 24 from the repository root:
 node --test tests/eat-the-boss/*.test.mjs
 ```
 
-The homepage links to game information. Play buttons appear on the Games index and game information page. Keep the existing studio publishing workflow when updating the game.
+The homepage links to game information. The Games catalog gives each game the same card layout and a link to its own information page; the browser Play button appears on the game's information page. Catalog images, platform labels, and summaries are defined in each game's front matter. Keep the existing studio publishing workflow when updating the game.
