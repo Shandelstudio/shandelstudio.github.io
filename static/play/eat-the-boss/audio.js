@@ -18,11 +18,11 @@ export class GameAudio {
  effect(type){if(!this.ctx||this.ctx.state!=='running'||this.muted)return;const t=this.ctx.currentTime;
   if(type==='poop'||type==='goldRelease'){this.tone(115,t,.13,.075,'sawtooth',false,47);this.tone(78,t+.065,.14,.06,'triangle',false,35);this.hiss(t,.11,.035,260);return;}
   if(type==='file'){this.hiss(t,.18,.1,2800);return;}
-  if(type==='coffeeRelease'){this.tone(410,t,.15,.05,'sine',false,180);return;}
+  if(type==='moneyRelease'){this.tone(410,t,.15,.05,'sine',false,180);return;}
   if(type==='catch'){this.tone(160,t,.09,.08,'sine',false,480);this.tone(640,t+.065,.07,.035,'triangle',false,310);return;}
   if(type==='attack'){this.hiss(t,.22,.16,850);this.tone(125,t,.22,.1,'triangle',false,38);return;}
   if(type==='bossHit'){this.hiss(t,.14,.12,1300);this.tone(300,t,.21,.1,'square',false,60);return;}
-  const notes={intro:[130,0,130,196,0,262],enrage:[196,147,110,0,110],crowned:[523,659,784,1047,0,784,1047,1318],gold:[660,880,1320],coffee:[523,784,1047],damage:[190,125,72],miss:[190,125],throw:[220,440,880],warning:[392,0,392],open:[523,784],promoted:[392,494,587,784],gameover:[392,330,294,196],victory:[523,659,784,1047,784,1047,1318]}[type];if(!notes)return;notes.forEach((f,i)=>{if(f)this.tone(f,t+i*.09,.16,type==='warning'?.07:.065,type==='damage'?'sawtooth':'square');});
+  const notes={intro:[130,0,130,196,0,262],enrage:[196,147,110,0,110],crowned:[523,659,784,1047,0,784,1047,1318],gold:[660,880,1320],money:[523,784,1047],damage:[190,125,72],miss:[190,125],throw:[220,440,880],warning:[392,0,392],open:[523,784],promoted:[392,494,587,784],gameover:[392,330,294,196],victory:[523,659,784,1047,784,1047,1318]}[type];if(!notes)return;notes.forEach((f,i)=>{if(f)this.tone(f,t+i*.09,.16,type==='warning'?.07:.065,type==='damage'?'sawtooth':'square');});
  }
  silence(){this.setPlaying(false);this.stopNodes(this.effectNodes);}
 }

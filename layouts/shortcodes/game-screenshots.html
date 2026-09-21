@@ -1,0 +1,15 @@
+{{- $captions := dict "cash-gameplay.png" "Catch cash to restore a heart." "hr-review.png" "Face the HR Gatekeeper on floor 5." "executive-office.png" "New offices and outfits as you climb." -}}
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr));gap:1rem;max-width:900px">
+  {{- range slice "cash-gameplay.png" "hr-review.png" "executive-office.png" -}}
+  {{- $name := . -}}
+  {{- with $.Page.Resources.GetMatch (printf "screenshots/%s" $name) -}}
+  {{- $preview := .Resize "390x webp q85" -}}
+  <figure style="margin:0">
+    <a href="{{ .RelPermalink }}" aria-label="Enlarge: {{ index $captions $name }}">
+      <img src="{{ $preview.RelPermalink }}" alt="{{ index $captions $name }}" width="{{ $preview.Width }}" height="{{ $preview.Height }}" loading="lazy" style="display:block;width:100%;height:auto;max-width:390px;border-radius:10px;border:1px solid #645046;margin:0">
+    </a>
+    <figcaption style="font-size:14px;line-height:1.5;margin-top:8px">{{ index $captions $name }}</figcaption>
+  </figure>
+  {{- end -}}
+  {{- end -}}
+</div>

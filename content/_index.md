@@ -7,13 +7,13 @@ Shandel is a gaming studio focused on delivering innovative and memorable experi
 
 With a focus on community and player engagement, Shandel continuously explores new ideas, pushing the boundaries of what games can offer. Dive in and discover the worlds Shandel has to offer — where fun, creativity, and excitement come together.
 
-## Play in your browser
+## Latest game
 
 **[Eat the Boss's shit to promote]({{< relref "/games/eat-the-boss" >}})**
 
 Climb 20 corporate floors, survive the managers, and take the boss's chair. Play on your phone or desktop — no download needed.
 
-{{< button href="/play/eat-the-boss/" >}}Play in browser{{< /button >}}
+[Explore our games]({{< relref "/games" >}})
 
 ## More from Shandel
 

@@ -19,3 +19,6 @@ body[data-mode="victory"] .overlay{align-items:end;background:linear-gradient(tr
 @media(orientation:landscape) and (max-height:550px){.boss-entry{top:24%;left:8%;right:8%;padding:10px}.boss-entry>strong{font-size:32px}.boss-entry>span{font-size:10px;margin-bottom:5px}.boss-entry>small{margin-top:8px}.boss-entry{border-width:3px}body[data-mode="victory"] .overlay-inner{max-width:210px;margin-left:auto}body[data-mode="victory"] .overlay h1{font-size:28px}}
 
 body[data-mode="victory"] .hud,body[data-mode="victory"] .review-hud{display:none}
+
+.stage-badge{font-size:14px;line-height:1.5;white-space:pre-line;top:23%;max-width:88%;padding:10px 16px}.boss-entry{top:21%;padding:18px 12px}.boss-entry>p{font:500 15px/1.5 'DM Sans',Arial,sans-serif;white-space:pre-line;color:#f4efdf;margin:14px auto 0;max-width:350px}.boss-entry>small{letter-spacing:.04em}.boss-entry>strong{font-size:clamp(34px,9vw,58px)}
+@media(max-height:600px){.boss-entry{top:14%;padding:10px}.boss-entry>p{font-size:13px;line-height:1.35;margin-top:9px}.boss-entry>strong{font-size:30px}.boss-entry>small{margin-top:8px}}

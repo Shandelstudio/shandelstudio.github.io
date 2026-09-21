@@ -18,10 +18,14 @@ A corporate ladder with a filthy catch. Start at the bottom, catch what the boss
 
 **Phone or desktop · No download · No account**
 
+## In-game screenshots
+
+{{< game-screenshots >}}
+
 ## How to play
 
 - **Move:** slide your finger anywhere on the scene, or use the arrow keys / A and D.
-- **Catch and dodge:** poop earns points, gold is worth three, coffee restores a heart, and red files cost a life.
+- **Catch and dodge:** poop earns points, gold is worth three, cash restores a heart, and red files cost a life.
 - **Beat the managers:** dodge their attacks and catch during openings to counterattack automatically.
 
 P or Esc pauses on a keyboard. Progress saves in this browser on this device. Sound starts when you press Play.

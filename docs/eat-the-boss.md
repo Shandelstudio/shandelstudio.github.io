@@ -13,4 +13,12 @@ The game uses `localStorage` for progress and mute preference. It does not use a
 
 Publish through the existing Hugo workflow in `.github/workflows/gh-pages.yml`. Do not replace that workflow with the standalone ZIP's `pages.yml`: that would publish the game over the whole studio site.
 
-The integrated game comes from the verified September 14 handoff (source revision `abe9a306ac5253c43826a591b5a1d70016d81ea3`). Its 20 automated tests passed before integration.
+The September 21 update replaces coffee with cash, makes each middle manager the sole opponent and drop source, gives boss introductions seven seconds with a paused deadline, and cleans sprite matte residue without removing enclosed white clothing. Screenshots are page resources under `content/games/eat-the-boss/screenshots/`.
+
+Run the regression tests with Node.js 24 from the repository root:
+
+```sh
+node --test tests/eat-the-boss/*.test.mjs
+```
+
+The homepage links to game information. Play buttons appear on the Games index and game information page. Keep the existing studio publishing workflow when updating the game.
