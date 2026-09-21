@@ -1,5 +1,6 @@
 import {W,H,LEVELS,OFFICES} from './engine.js';
 import {clearSpriteMatte} from './texture.js';
+import {MANAGER_RIGS,managerPose,managerHand,managerReleasePoint} from './manager-animation.js';
 const DEFINITIONS={
  employee:['assets/sprites.png',141,60,358,645],boss:['assets/sprites.png',654,80,555,626],poop:['assets/sprites.png',122,783,432,410],gold:['assets/sprites.png',705,783,436,410],
  outfit0:['assets/career-outfits.png',165,13,325,604],outfit1:['assets/career-outfits.png',741,13,323,604],outfit2:['assets/career-outfits.png',161,627,340,607],outfit3:['assets/career-outfits.png',731,627,339,608],
@@ -18,6 +19,17 @@ export class Renderer {
    const pixels=c.getImageData(0,0,layer.width,layer.height);clearSpriteMatte(pixels.data,layer.width,layer.height);c.putImageData(pixels,0,0);
    this.textures.set(name,layer);
   }
+  this.managerRigs=MANAGER_RIGS.map((rig,i)=>{
+   const source=this.textures.get(`manager${i}`),body=document.createElement('canvas'),arm=document.createElement('canvas');
+   body.width=arm.width=source.width;body.height=arm.height=source.height;
+   const mask=c=>{c.beginPath();rig.arm.forEach(([x,y],n)=>c[n?'lineTo':'moveTo'](x*source.width,y*source.height));c.closePath();};
+   const ac=arm.getContext('2d');mask(ac);ac.clip();ac.drawImage(source,0,0);
+   const bc=body.getContext('2d');bc.drawImage(source,0,0);bc.globalCompositeOperation='destination-out';mask(bc);bc.fill();
+   // Extend the jacket behind the shoulder so a raised arm never leaves a hole.
+   bc.globalCompositeOperation='destination-over';bc.fillStyle=rig.fill;bc.strokeStyle=rig.shade;bc.lineWidth=source.width*.025;
+   bc.beginPath();bc.moveTo(source.width*.55,source.height*.43);bc.lineTo(source.width*rig.shoulder[0],source.height*(rig.shoulder[1]-.015));bc.lineTo(source.width*.72,source.height*.66);bc.lineTo(source.width*.52,source.height*.65);bc.closePath();bc.fill();bc.stroke();
+   return {body,arm};
+  });
   this.ready=true;
  }
  get viewHeight(){return this.game.height+this.floorSpace;}
@@ -91,18 +103,20 @@ export class Renderer {
  }
  manager(t){
   const g=this.game,b=g.review,c=this.ctx,key=`manager${b.sprite}`,img=this.textures.get(key);if(!img)return;
-  const defeated=b.phase==='defeated',flight=defeated?b.defeatTime:0,h=b.sprite===2?103:108,w=img.width/img.height*h,entrance=b.phase==='intro'?Math.max(0,1-(b.introTotal-b.timer)/1.15):0,x=g.managerX-flight*340-entrance*entrance*245,foot=101-flight*65-(this.reduced?0:entrance>0?Math.abs(Math.sin(t*19))*5:0),warning=b.phase==='warning',attack=b.phase==='attack',prep=warning?1-b.timer/b.warningTime:0,slam=attack?Math.max(0,1-(b.attack-b.timer)*5):0;
-  const dropping=g.pendingDrop||g.release>0,type=g.pendingDrop?.type??g.releaseType,pooping=dropping&&(type==='poop'||type==='gold'),strain=pooping?(g.pendingDrop?Math.sin((1-g.windup/.46)*Math.PI):g.release/.38):0;
-  const lean=this.reduced?0:defeated?-flight*2.5:g.recoil?Math.sin(t*34)*g.recoil*.42:warning?-.18*prep:pooping?-.13*strain:slam*.27;
-  c.save();c.translate(x,foot);if(pooping)c.scale(1+strain*.055,1-strain*.075);c.rotate(lean);c.fillStyle=warning?'#ffce6940':b.phase==='open'?'#d2f86a24':'#ff625d35';c.beginPath();c.ellipse(0,1,w*.58,5,0,0,Math.PI*2);c.fill();
-  // Independently planted legs and a hinging torso make the attack readable at phone scale.
-  const hip=.65,sh=img.height*hip,bob=this.reduced?0:Math.sin(t*3)*.8+prep*3-slam*5;
-  c.drawImage(img,0,sh,img.width,img.height-sh,-w/2,-h*(1-hip),w,h*(1-hip));
-  c.save();c.translate(0,-h*(1-hip));c.rotate(lean*.3);c.drawImage(img,0,0,img.width,sh,-w/2,-h*hip+bob,w,h*hip+1);c.restore();c.restore();
-  if(g.pendingDrop&&!pooping){const raised=1-g.windup/.34,held={x:x+w*.38,y:57-raised*26,rotation:-.25};if(type==='money')this.money(held);else this.file(held);}
-  if(g.release>0&&!pooping&&!this.reduced){c.strokeStyle='#c3e5bd88';c.lineWidth=2;c.beginPath();c.moveTo(x+27,80);c.quadraticCurveTo(x+45,94,x+28,117);c.stroke();}
-  if(warning){const raised=prep*28;this.file({x:x+w*.35,y:63-raised,rotation:-.2-prep*.5});c.fillStyle='#ffcf73';c.font='bold 21px monospace';c.textAlign='center';c.fillText('!',x-w*.6,27);}
-  if(attack){const elapsed=b.attack-b.timer;for(const [i,z] of g.zones.entries()){if(z.width<10)continue;const travel=this.reduced?1:Math.min(1,elapsed/.32),tx=x+(z.x-x)*travel,ty=66+(g.catchY-66)*travel;this.file({x:tx,y:ty,rotation:travel*Math.PI*(b.sprite===2?3:.3)});if(travel===1){c.strokeStyle='#ff807377';c.lineWidth=3;c.beginPath();c.ellipse(z.x,g.catchY+42,Math.min(z.width*.38,68)*(1+(elapsed*3)%1),5,0,0,Math.PI*2);c.stroke();}}}
+  const rig=MANAGER_RIGS[b.sprite],parts=this.managerRigs[b.sprite],pose=managerPose(g,this.reduced),defeated=b.phase==='defeated',flight=defeated?b.defeatTime:0,h=rig.height,w=img.width/img.height*h;
+  const entrance=b.phase==='intro'?Math.max(0,1-(b.introTotal-b.timer)/1.15):0,x=g.managerX-flight*340-entrance*entrance*245,foot=101-flight*65-(this.reduced?0:entrance>0?Math.abs(Math.sin(t*19))*5:0),warning=b.phase==='warning',attack=b.phase==='attack';
+  const lean=this.reduced?0:defeated?-flight*2.5:g.recoil?Math.sin(t*34)*g.recoil*.42:0;
+  c.save();c.translate(x,foot);c.rotate(lean);c.fillStyle=warning?'#ffce6940':b.phase==='open'?'#d2f86a24':'#ff625d35';c.beginPath();c.ellipse(0,1,w*.58,5,0,0,Math.PI*2);c.fill();
+  const hipY=-h*(1-rig.hip)+pose.crouch,sh=img.height*rig.hip;
+  // Feet remain on the balcony while the knees bend and the upper body pivots.
+  c.drawImage(parts.body,0,sh,img.width,img.height-sh,-w/2,hipY,w,-hipY+1);
+  c.save();c.translate(0,hipY);c.rotate(pose.torso);c.drawImage(parts.body,0,0,img.width,sh,-w/2,-h*rig.hip,w,h*rig.hip+1);
+  const sx=(rig.shoulder[0]-.5)*w,sy=(rig.shoulder[1]-rig.hip)*h;
+  c.translate(sx,sy);c.rotate(pose.arm);c.drawImage(parts.arm,-rig.shoulder[0]*w,-rig.shoulder[1]*h,w,h);c.restore();
+  if(pose.held){const hand=managerHand(b.sprite,w,pose);c.save();c.translate(hand.x,hand.y);c.scale(.68,.68);const item={x:0,y:0,rotation:pose.arm+pose.torso};if(pose.held==='money')this.money(item);else this.file(item);c.restore();}
+  c.restore();
+  if(warning){c.fillStyle='#ffcf73';c.font='bold 21px monospace';c.textAlign='center';c.fillText('!',x-w*.6,27);}
+  if(attack){const elapsed=b.attack-b.timer,origin=managerReleasePoint(b.sprite,'file');for(const z of g.zones){if(z.width<10)continue;const travel=this.reduced?1:Math.min(1,elapsed/.32),tx=x+origin.x+(z.x-x-origin.x)*travel,ty=foot+origin.y+(g.catchY-foot-origin.y)*travel;this.file({x:tx,y:ty,rotation:travel*Math.PI*(b.sprite===2?3:.3)});if(travel===1){c.strokeStyle='#ff807377';c.lineWidth=3;c.beginPath();c.ellipse(z.x,g.catchY+42,Math.min(z.width*.38,68)*(1+(elapsed*3)%1),5,0,0,Math.PI*2);c.stroke();}}}
   if(g.recoil>0&&!this.reduced){for(let i=0;i<3;i++){const a=t*8+i*Math.PI*2/3;c.fillStyle='#ffd66b';c.fillRect(x+Math.cos(a)*30,17+Math.sin(a)*6,4,4);}}
  }
  reviewZones(t){

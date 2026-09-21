@@ -1,3 +1,4 @@
+import {MANAGER_TIMING,managerReleasePoint} from './manager-animation.js';
 export const W=540,H=660,CATCH_Y=564;
 export const clamp=(v,min,max)=>Math.max(min,Math.min(max,v));
 const titles=['Unpaid Intern','Paid Intern','Office Assistant','Junior Associate','Associate','Senior Associate','Team Lead','Assistant Manager','Manager','Senior Manager','Department Head','Associate Director','Director','Senior Director','Vice President','Senior Vice President','Executive VP','Chief of Staff','Chief Operating Officer','Chief Executive Officer'];
@@ -35,12 +36,14 @@ export class Game {
  spawn(){
   if(this.pendingDrop)return;const c=LEVELS[this.level],r=this.random(),hazard=this.review?.phase==='open'?c.hazard*(this.review.rage?.94:.7):c.hazard,money=this.level>=2?.022:0;
   const type=r<hazard?'file':r<hazard+money?'money':r<hazard+money+c.gold?'gold':'poop';
-  this.pendingDrop={type,vx:c.wind*(.7+this.random()*.6)*(this.review?.rage?1.25:1)*(this.review?.patternNow==='budget'&&this.review.cycle%2?-1:1),speed:c.speed*(.92+this.random()*.16)*(this.review?.rage?1.14:1)};this.windup=type==='poop'||type==='gold'?.46:.34;
+  this.pendingDrop={type,vx:c.wind*(.7+this.random()*.6)*(this.review?.rage?1.25:1)*(this.review?.patternNow==='budget'&&this.review.cycle%2?-1:1),speed:c.speed*(.92+this.random()*.16)*(this.review?.rage?1.14:1)};
+  const poop=type==='poop'||type==='gold';this.windup=this.review&&this.level!==19?(poop?MANAGER_TIMING.poopWindup:MANAGER_TIMING.throwWindup):(poop?.46:.34);
  }
  releaseThrow(){
-  const p=this.pendingDrop;if(!p)return;const drop={x:clamp(this.throwerX+28,24,W-24),y:100,vx:p.vx,vy:p.speed*this.flightScale,type:p.type,phase:this.random()*6.28,rotation:(this.random()-.5)*.5};this.spaceHazard(drop);this.drops.push(drop);this.spawnCount++;
+  const p=this.pendingDrop;if(!p)return;const manager=this.review&&this.level!==19,origin=manager?managerReleasePoint(this.review.sprite,p.type):{x:28,y:-1};
+  const drop={x:clamp(this.throwerX+origin.x,24,W-24),y:101+origin.y,vx:p.vx,vy:p.speed*this.flightScale,type:p.type,phase:this.random()*6.28,rotation:(this.random()-.5)*.5};this.spaceHazard(drop);this.drops.push(drop);this.spawnCount++;
   if(!this.review&&this.level>=6&&this.spawnCount%4===0&&p.type!=='file'){const decoy={...drop,type:'file',x:clamp(drop.x+(drop.x<W/2?96:-96),25,W-25),vy:drop.vy*.83};this.spaceHazard(decoy);this.drops.push(decoy);}
-  this.pendingDrop=null;this.releaseType=drop.type;this.release=drop.type==='poop'||drop.type==='gold'?.38:.24;this.event('release','',{x:drop.x,y:drop.y,itemType:drop.type});
+  const poop=drop.type==='poop'||drop.type==='gold';this.pendingDrop=null;this.releaseType=drop.type;this.release=manager?(poop?MANAGER_TIMING.poopRelease:MANAGER_TIMING.throwRelease):(poop?.38:.24);this.event('release','',{x:drop.x,y:drop.y,itemType:drop.type});
  }
  spaceHazard(drop){
   const isHazard=d=>d.type==='file',arrival=d=>(this.catchY-d.y)/d.vy;
@@ -84,8 +87,9 @@ export class Game {
   this.timeLeft=Math.max(0,this.timeLeft-dt);if(this.timeLeft<=0){this.lives=0;this.state='gameover';this.event('gameover','DEADLINE MISSED');return;}
   this.updateReview(dt);if(this.state!=='playing')return;
   const oldBossX=this.throwerX,pace=this.time*(1.2+this.level*.025),position=W/2+Math.sin(pace)*173+Math.sin(pace*2.3+this.level)*27;
-  if(!this.pendingDrop){if(this.review&&this.level!==19){if(this.review.phase==='open')this.managerX=position;}else this.bossX=position;}this.bossWalk=this.throwerX-oldBossX;
-  if(!this.review||this.review.phase==='open'){this.spawnClock-=dt;if(this.spawnClock<=0&&!this.pendingDrop){this.spawn();this.spawnClock=LEVELS[this.level].interval*(.87+this.random()*.26);}if(this.pendingDrop){this.windup=Math.max(0,this.windup-dt);if(this.windup<=0)this.releaseThrow();}}
+  const manager=this.review&&this.level!==19,recovery=MANAGER_TIMING[this.releaseType==='poop'||this.releaseType==='gold'?'poopRelease':'throwRelease'];
+  if(!this.pendingDrop){if(manager){if(this.review.phase==='open'&&this.release<=recovery-.12)this.managerX+=clamp(position-this.managerX,-230*dt,230*dt);}else this.bossX=position;}this.bossWalk=this.throwerX-oldBossX;
+  if(!this.review||this.review.phase==='open'){this.spawnClock-=dt;if(this.spawnClock<=0&&!this.pendingDrop&&(!manager||this.release<=0)){this.spawn();this.spawnClock=LEVELS[this.level].interval*(.87+this.random()*.26);}if(this.pendingDrop){this.windup=Math.max(0,this.windup-dt);if(this.windup<=0)this.releaseThrow();}}
   for(let i=this.drops.length-1;i>=0;i--){const d=this.drops[i],oldY=d.y;d.x+=d.vx*dt;d.y+=d.vy*dt;if(d.x<24||d.x>W-24){d.x=clamp(d.x,24,W-24);d.vx*=-1;}
    if(oldY<this.catchY&&d.y>=this.catchY&&Math.abs(d.x-this.x)<(d.type==='file'?35:28)){this.drops.splice(i,1);this.catchDrop(d);if(this.state!=='playing')break;continue;}
    if(d.y>this.height+20){this.drops.splice(i,1);if(d.type==='poop'||d.type==='gold'){if(this.review){this.quota=Math.max(0,this.quota-1);this.combo=0;this.event('miss','−1 POWER');}else this.damage(clamp(d.x,15,W-15),this.height-20);}if(this.state!=='playing')break;}
