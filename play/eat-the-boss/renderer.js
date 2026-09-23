@@ -1,24 +1,26 @@
 import {W,H,LEVELS,OFFICES} from './engine.js';
 import {clearSpriteMatte} from './texture.js';
 import {MANAGER_RIGS,managerPose,managerHand,managerReleasePoint} from './manager-animation.js';
-import {careerBulk,bodyWidthAt} from './career.js';
+import {careerBulk} from './career.js';
 import {drawElevator,drawFailure} from './cinematics.js';
 const DEFINITIONS={
  employee:['assets/sprites.png',141,60,358,645],boss:['assets/sprites.png',654,80,555,626],poop:['assets/sprites.png',122,783,432,410],gold:['assets/sprites.png',705,783,436,410],
- outfit0:['assets/career-outfits.png',165,13,325,604],outfit1:['assets/career-outfits.png',741,13,323,604],outfit2:['assets/career-outfits.png',161,627,340,607],outfit3:['assets/career-outfits.png',731,627,339,608],
+ outfit0:['assets/career-outfits.png',165,13,325,604],outfit1:['assets/career-redrawn.png',140,14,281,486],outfit2:['assets/career-redrawn.png',601,15,325,486],outfit3:['assets/career-redrawn.png',1070,14,347,487],
  manager0:['assets/middle-managers.png',110,22,374,746],manager1:['assets/middle-managers.png',755,40,379,728],manager2:['assets/middle-managers.png',1288,66,660,702],
  throw0:['assets/boss-throws.png',92,124,497,498],throw1:['assets/boss-throws.png',714,17,515,613],throw2:['assets/boss-throws.png',42,726,633,457],throw3:['assets/boss-throws.png',726,680,503,506],
  squat:['assets/boss-defecation.png',105,87,448,496],relief:['assets/boss-defecation.png',105,676,548,502],stand:['assets/boss-defecation.png',714,620,432,563],
- cheer:['assets/ceo-finale.png',128,8,400,607],adjust:['assets/ceo-finale.png',738,12,326,607],seated:['assets/ceo-finale.png',106,623,451,589],ceo:['assets/ceo-finale.png',692,632,446,592]
+ cheer:['assets/career-redrawn.png',95,521,370,487],adjust:['assets/career-redrawn.png',600,522,331,485],seated:['assets/career-redrawn.png',1031,521,418,486],
+ liftOpen:['assets/elevator.png',808,61,654,855],liftDoors:['assets/elevator.png',218,165,364,726]
 };
 export class Renderer {
- constructor(canvas,game){this.canvas=canvas;this.ctx=canvas.getContext('2d');this.game=game;this.images=new Map();this.textures=new Map();this.scenes=new Map();this.ready=false;this.reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;this.camera=0;this.previousLevel=0;this.transition=0;this.floaters=[];this.dpr=1;this.floorSpace=0;}
+ constructor(canvas,game){this.canvas=canvas;this.ctx=canvas.getContext('2d');this.game=game;this.images=new Map();this.textures=new Map();this.scenes=new Map();this.ready=false;this.reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;this.camera=0;this.previousLevel=0;this.transition=0;this.dpr=1;this.floorSpace=0;}
  async load(){
   const paths=new Set([...Object.values(DEFINITIONS).map(d=>d[0]),...OFFICES.map(o=>o.asset)]);
   await Promise.all([...paths].map(async src=>{const img=new Image();img.src=src;await img.decode();this.images.set(src,img);}));
   for(const [name,d] of Object.entries(DEFINITIONS)){
    const layer=document.createElement('canvas');layer.width=d[3];layer.height=d[4];const c=layer.getContext('2d',{willReadFrequently:true});c.drawImage(this.images.get(d[0]),...d.slice(1),0,0,d[3],d[4]);
-   const pixels=c.getImageData(0,0,layer.width,layer.height);clearSpriteMatte(pixels.data,layer.width,layer.height);c.putImageData(pixels,0,0);
+   // New atlas assets have clean native alpha; preserve their shaded fabric and metal.
+   if(!['assets/career-redrawn.png','assets/elevator.png'].includes(d[0])){const pixels=c.getImageData(0,0,layer.width,layer.height);clearSpriteMatte(pixels.data,layer.width,layer.height);c.putImageData(pixels,0,0);}
    this.textures.set(name,layer);
   }
   this.managerRigs=MANAGER_RIGS.map((rig,i)=>{
@@ -75,19 +77,10 @@ export class Renderer {
   if(this.transition>0){c.globalAlpha=this.transition;const before=this.scene(this.previousLevel);if(before)c.drawImage(before,0,0);c.globalAlpha=1;this.transition=Math.max(0,this.transition-dt*1.6);}
  }
  sprite(name,x,y,w,h,rotation=0,alpha=1,flip=false){const img=this.textures.get(name);if(!img)return;const c=this.ctx;c.save();c.translate(x,y);c.rotate(rotation);c.globalAlpha*=alpha;if(flip)c.scale(-1,1);c.drawImage(img,-w/2,-h/2,w,h);c.restore();}
- careerTexture(key,bulk){
-  const source=this.textures.get(key);if(!source||!bulk)return source;
-  this.careerTextures??=new Map();const cacheKey=`${key}:${bulk}`;if(this.careerTextures.has(cacheKey))return this.careerTextures.get(cacheKey);
-  const shapeBulk=key==='seated'?bulk*.6:bulk,layer=document.createElement('canvas');layer.width=Math.ceil(source.width*(1+shapeBulk*.44*.45));layer.height=source.height;const c=layer.getContext('2d');c.imageSmoothingEnabled=false;
-  // Widen the torso; move the arms out with it without stretching their length.
-  const side=source.width*.275,center=source.width*.45;
-  for(let y=0;y<source.height;y+=3){const height=Math.min(3,source.height-y),belly=center*bodyWidthAt((y+height/2)/source.height,shapeBulk),left=(layer.width-belly)/2;c.drawImage(source,0,y,side,height,left-side,y,side,height);c.drawImage(source,side,y,center,height,left,y,belly,height);c.drawImage(source,side+center,y,side,height,left+belly,y,side,height);}
-  this.careerTextures.set(cacheKey,layer);return layer;
- }
  employee(x,y,t,reflection=false,options={}){
-  const g=this.game,c=this.ctx,level=options.level??g.level,bulk=careerBulk(level),key=`outfit${LEVELS[level].outfit}`,img=this.careerTexture(key,bulk);if(!img)return;const w=60*img.width/this.textures.get(key).width,h=111,moving=(options.moving??(g.state==='playing'&&Math.abs(g.walk||0)>.1))&&!this.reduced,cycle=t*(23-bulk*2),stride=moving?Math.sin(cycle):0;
+  const g=this.game,c=this.ctx,level=options.level??g.level,bulk=careerBulk(level),key=`outfit${LEVELS[level].outfit}`,img=this.textures.get(key);if(!img)return;const h=111,w=img.width/img.height*h,moving=(options.moving??(g.state==='playing'&&Math.abs(g.walk||0)>.1))&&!this.reduced,cycle=t*(23-bulk*2),stride=moving?Math.sin(cycle):0;
   c.save();c.translate(x,y+(moving?-Math.abs(stride)*3:Math.sin(t*2)*.7));if(reflection){c.scale(1,-.26);c.globalAlpha=.1;}
-  c.rotate(this.reduced?0:moving?Math.sign(g.walk)*.035:0);const split=.60,upper=img.height*split,hip=-h/2+h*split;
+  c.rotate(this.reduced?0:moving?Math.sign(g.walk)*.035:0);const split=bulk>=2?.72:.62,upper=img.height*split,hip=-h/2+h*split;
   for(const side of [-1,1]){c.save();c.translate(side*w*.25,hip-1);c.rotate(stride*side*.28/(1+bulk*.2));c.drawImage(img,side===1?img.width/2:0,upper,img.width/2,img.height-upper,-w*.25,0,w/2,h*(1-split)+1);c.restore();}
   c.drawImage(img,0,0,img.width,upper,-w/2,-h/2,w,h*split+1);c.restore();
  }
@@ -158,7 +151,7 @@ export class Renderer {
   if(v<1.9)this.boss(t);
   const x=g.x+(W/2-g.x)*rise,ground=h-9-(h-115)*rise,bounce=v<1.5&&!this.reduced?Math.abs(Math.sin(v*8))*9:0;
   if(v>1.4&&v<4.2){const glow=c.createLinearGradient(0,ground-125,0,ground+20);glow.addColorStop(0,'#f8dc8100');glow.addColorStop(.7,'#f8dc8130');glow.addColorStop(1,'#f8dc8100');c.fillStyle=glow;c.fillRect(x-40,ground-125,80,150);if(!this.reduced)for(let i=0;i<9;i++){c.fillStyle='#f9d87a';c.fillRect(x-28+(i*17)%58,ground-((v*90+i*23)%120),3,5);}}
-  let key=v<1.55?'cheer':v<4.8?'adjust':'seated';const img=this.careerTexture(key,careerBulk(g.level,true)),heroH=key==='adjust'?110:key==='cheer'?115:108,heroW=img?img.width/img.height*heroH:70;
+  let key=v<1.55?'cheer':v<4.8?'adjust':'seated';const img=this.textures.get(key),heroH=key==='adjust'?110:key==='cheer'?115:108,heroW=img?img.width/img.height*heroH:70;
   if(img){c.save();c.translate(x,ground-heroH/2-bounce);c.rotate(this.reduced?0:v<1.55?Math.sin(v*7)*.04:0);c.drawImage(img,-heroW/2,-heroH/2,heroW,heroH);c.restore();}
   if(v>5.1){c.fillStyle='#252035';c.fillRect(W/2-43,113,86,21);c.fillStyle='#e8c875';c.fillRect(W/2-41,115,82,17);c.fillStyle='#302538';c.font='bold 9px monospace';c.textAlign='center';c.fillText('CHIEF EXECUTIVE',W/2,126);}
   c.restore();
@@ -174,9 +167,8 @@ export class Renderer {
   c.fillStyle='#070b2050';c.beginPath();c.ellipse(px,h-13,30,6,0,0,Math.PI*2);c.fill();
   if(g.level>=6&&g.state!=='victory'){c.save();c.beginPath();c.rect(0,h-20,W,20);c.clip();this.employee(px,h-2,t,true);c.restore();}
   if(g.invincible<=0||Math.floor(t*14)%2===0)this.employee(px,py,t);
-  if(g.gulp>0){c.fillStyle='#d2f86a';c.globalAlpha=g.gulp*2.2;c.beginPath();c.arc(px,py-31,11,0,Math.PI*2);c.fill();c.globalAlpha=1;}
+  if(g.gulp>0){c.fillStyle=g.gulpColor||'#9e6a37';c.globalAlpha=g.gulp*2.2;c.beginPath();c.arc(px,py-31,9,0,Math.PI*2);c.fill();c.globalAlpha=1;}
   for(const p of g.particles){c.globalAlpha=Math.min(1,p.life*2);c.fillStyle=p.color;c.fillRect(p.x,p.y,4,4);}c.globalAlpha=1;
-  if(g.state==='playing')for(let i=this.floaters.length-1;i>=0;i--){const f=this.floaters[i];f.life-=dt;f.y-=dt*28;c.globalAlpha=Math.max(0,f.life);c.fillStyle=f.color;c.font='bold 15px monospace';c.textAlign='center';c.fillText(f.text,f.x,f.y);if(f.life<=0)this.floaters.splice(i,1);}c.globalAlpha=1;
   if(g.state==='victory'&&g.victoryTime>1.5){c.fillStyle='#d2f86a';c.font='bold 14px monospace';c.textAlign='center';c.fillText('NEW CEO',W/2,125);if(!this.reduced)for(let i=0;i<34;i++){c.fillStyle=['#d2f86a','#ff8073','#7ccef1'][i%3];c.fillRect((i*97+Math.sin(t+i)*23)%W,(t*80+i*61)%h,4,8);}}
  }
 }
