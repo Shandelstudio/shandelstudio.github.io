@@ -9,7 +9,7 @@ test('all four reviews require damage to the manager and finish exactly once',()
  for(const level of [4,9,14,19]){
   const g=quiet(level),b=g.review;
   for(let hit=1;hit<=b.hp;hit++){
-   b.phase='open';b.timer=5;g.zones=[];
+   b.phase='open';b.timer=5;g.zones=[];g.spawnClock=9999;g.pendingDrop=null;g.drops=[];
    for(let n=0;n<b.charge;n++)feed(g);
    assert.equal(g.shots.length,1);assert.equal(g.quota,0);assert.equal(g.state,'playing');
    const before=g.x;for(let f=0;f<34;f++)g.update(.02,{targetX:hit%2?460:80});assert.notEqual(g.x,before);assert.equal(g.hitCount,hit);
@@ -40,4 +40,4 @@ test('texture matte clears edge checkerboard while preserving enclosed pale clot
 });
 
 test('boss entrances pause the deadline and attacks while movement remains available',()=>{for(const level of [4,9,14,19]){const g=new Game(()=>.6);g.start(level);const deadline=g.timeLeft;for(let i=0;i<150;i++)g.update(.02,{targetX:420});assert.equal(g.review.phase,'intro');assert.equal(g.timeLeft,deadline);assert.equal(g.drops.length,0);assert.equal(g.lives,3);assert.equal(g.x,420);for(let i=0;i<201;i++)g.update(.02);assert.equal(g.review.phase,'open');}});
-test('final boss has eight hits, a protected second-round transition and faster attacks',()=>{const g=quiet(19),b=g.review;assert.equal(b.hp,8);assert.equal(g.timeLeft,180);for(let hit=0;hit<4;hit++){b.phase='open';b.timer=9;for(let n=0;n<b.charge;n++)feed(g);for(let i=0;i<32;i++)g.update(.02);}assert.equal(g.hitCount,4);assert.equal(b.rage,true);assert.equal(b.phase,'phaseChange');assert.equal(g.drops.length,0);const deadline=g.timeLeft;g.update(.04);assert.equal(g.timeLeft,deadline);assert.ok(b.open<REVIEWS[19].open);assert.ok(b.warningTime<1.5);assert.equal(g.events.filter(e=>e.type==='enrage').length,1);g.state='victory';g.victoryTime=0;for(let i=0;i<220;i++)g.update(.04);assert.equal(g.events.filter(e=>e.type==='crowned').length,1);});
+test('final boss has eight hits, a seamless second round and faster attacks',()=>{const g=quiet(19),b=g.review;assert.equal(b.hp,8);assert.equal(g.timeLeft,180);for(let hit=0;hit<4;hit++){b.phase='open';b.timer=9;for(let n=0;n<b.charge;n++)feed(g);for(let i=0;i<32;i++)g.update(.02);}assert.equal(g.hitCount,4);assert.equal(b.rage,true);assert.equal(b.phase,'open');const drop={type:'poop',x:100,y:200,vx:0,vy:250};g.drops.push(drop);const deadline=g.timeLeft;g.update(.04);assert.ok(g.timeLeft<deadline);assert.ok(drop.y>200);assert.ok(g.pendingDrop||g.drops.length>1);assert.ok(b.open<REVIEWS[19].open);assert.ok(b.warningTime<1.5);assert.equal(g.events.filter(e=>e.type==='enrage').length,1);g.state='victory';g.victoryTime=0;for(let i=0;i<220;i++)g.update(.04);assert.equal(g.events.filter(e=>e.type==='crowned').length,1);});

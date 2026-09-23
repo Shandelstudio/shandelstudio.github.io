@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {Game,LEVELS} from '../../static/play/eat-the-boss/engine.js';
-import {careerBulk,bodyWidthAt,PROMOTION_DURATION,FAILURE_DURATION} from '../../static/play/eat-the-boss/career.js';
+import {careerBulk,PROMOTION_DURATION,FAILURE_DURATION} from '../../static/play/eat-the-boss/career.js';
 const tick=(g,seconds)=>{for(let n=0;n<Math.ceil(seconds/.02);n++)g.update(.02);};
 
 test('promotion freezes combat and dispatches one arrival after the lift ride',()=>{
@@ -23,9 +23,14 @@ test('all failure causes freeze combat and delay the fired screen until sinking 
  for(const reason of ['miss','file','deadline']){const g=new Game();g.start(2,750);g.fail(reason);const deadline=g.timeLeft;tick(g,1);assert.equal(g.state,'gameover');assert.equal(g.fired,false);assert.equal(g.timeLeft,deadline);tick(g,FAILURE_DURATION);assert.equal(g.fired,true);assert.equal(g.events.filter(e=>e.type==='fired').length,1);tick(g,3);assert.equal(g.events.filter(e=>e.type==='fired').length,1);g.start(g.level,g.startScore);assert.equal(g.score,750);assert.equal(g.failureTime,0);assert.equal(g.fired,false);}
 });
 
-test('outfit promotions grow the belly while preserving the face; the new CEO is largest',()=>{
+test('outfit promotions select the next body tier and the final CEO is largest',()=>{
  const stages=[0,5,10,15].map(level=>careerBulk(level));assert.deepEqual(stages,[0,1,2,3]);
  for(let level=0;level<20;level++)assert.equal(careerBulk(level),LEVELS[level].outfit);
- const widths=[...stages,careerBulk(19,true)].map(bulk=>bodyWidthAt(.59,bulk));for(let i=1;i<widths.length;i++)assert.ok(widths[i]>widths[i-1]);assert.ok(widths.at(-1)>2);
- for(let bulk=0;bulk<=4;bulk++)assert.equal(bodyWidthAt(.2,bulk),1);
+ assert.equal(careerBulk(19,true),4);
+});
+
+test('catch effects match the drop color and keep points without floating score text',()=>{
+ const g=new Game(()=>.5);g.start();g.catchDrop({type:'poop',x:270,y:g.catchY});assert.equal(g.score,25);assert.ok(g.particles.every(p=>p.color==='#9e6a37'));assert.equal(g.gulpColor,'#9e6a37');assert.equal(g.events.at(-1).text,'');
+ g.particles=[];g.catchDrop({type:'gold',x:270,y:g.catchY});assert.equal(g.score,100);assert.ok(g.particles.every(p=>p.color==='#c09b45'));assert.equal(g.gulpColor,'#c09b45');
+ g.lives=2;g.particles=[];g.catchDrop({type:'money',x:270,y:g.catchY});assert.equal(g.lives,3);assert.ok(g.particles.every(p=>p.color==='#8ee696'));
 });

@@ -64,7 +64,7 @@ export class Game {
  }
  catchDrop(d){
   if(d.type==='file'){this.damage(d.x,d.y);return;}if(d.type==='money'){this.lives=Math.min(3,this.lives+1);this.score+=25;this.burst(d.x,d.y,'#8ee696');this.event('money','PAYDAY +1 ♥');return;}
-  const value=d.type==='gold'?3:1;this.quota+=value;this.combo++;const multiplier=Math.min(4,1+Math.floor((this.combo-1)/5)),points=(d.type==='gold'?75:25)*multiplier;this.score+=points;this.gulp=.23;this.burst(d.x,d.y,d.type==='gold'?'#ffdc62':'#d2f86a');this.event('catch',`+${points}`,{x:d.x,y:d.y,multiplier,itemType:d.type});
+  const value=d.type==='gold'?3:1;this.quota+=value;this.combo++;const multiplier=Math.min(4,1+Math.floor((this.combo-1)/5)),points=(d.type==='gold'?75:25)*multiplier;this.score+=points;this.gulp=.23;this.gulpColor=d.type==='gold'?'#c09b45':'#9e6a37';this.burst(d.x,d.y,this.gulpColor);this.event('catch','',{x:d.x,y:d.y,multiplier,itemType:d.type});
   const c=LEVELS[this.level];if(this.review)this.quota=Math.min(c.quota,this.quota);else if(this.quota>=c.quota&&this.combo>=c.streak)this.promote();
  }
  throwBack(){if(this.state!=='playing'||!this.review||this.review.phase!=='open'||this.quota<this.review.charge||this.shots.length)return false;this.quota=0;this.shots.push({x:this.x,y:this.catchY,t:0,fromX:this.x});this.event('throw','RETURN TO SENDER');return true;}
@@ -76,12 +76,12 @@ export class Game {
   this.drops=this.drops.filter(d=>d.type!=='file');this.pendingDrop=null;this.windup=0;
  }
  sweepZones(){const b=this.review,gap=this.level===19?(b.rage?114:132):152,left=Math.max(0,b.safeX-gap/2),right=Math.min(W,b.safeX+gap/2);this.zones=[{x:left/2,width:left},{x:(W+right)/2,width:W-right}];}
- enrage(){const b=this.review;b.rage=true;b.phase='phaseChange';b.timer=3.5;b.phaseChangeTotal=3.5;b.open=3.15;b.attack=1.7;b.warningTime=1.05;b.chained=false;this.drops=[];this.pendingDrop=null;this.windup=0;this.zones=[];this.event('enrage','FINAL WARNING');}
+ enrage(){const b=this.review;b.rage=true;b.open=3.15;b.attack=1.7;b.warningTime=1.05;b.chained=false;b.phase='open';b.timer=b.open;this.zones=[];this.spawnClock=Math.min(this.spawnClock,.08);this.event('enrage');}
  updateReview(dt){
   const b=this.review;if(!b)return;
   if(b.phase==='defeated'){b.defeatTime+=dt;if(b.defeatTime>=1.3)this.promote();return;}
   b.timer-=dt;if(b.timer<=0){
-   if(b.phase==='intro'||b.phase==='phaseChange'){b.phase='open';b.timer=b.open+1;this.spawnClock=.25;this.event('open','CATCH TO COUNTER');}
+   if(b.phase==='intro'){b.phase='open';b.timer=b.open+1;this.spawnClock=.25;this.event('open','CATCH TO COUNTER');}
    else if(b.phase==='open'){if(this.shots.length){b.timer=.1;return;}this.warnReview();}
    else if(b.phase==='warning'){b.phase='attack';b.timer=b.attack;b.attacked=false;this.event('attack',b.patternNow.toUpperCase());}
    else if(b.rage&&this.hitCount>=6&&!b.chained){b.chained=true;this.warnReview();}
@@ -96,7 +96,7 @@ export class Game {
   if(this.state==='victory'){const before=this.victoryTime;this.victoryTime+=dt;if(before<5.1&&this.victoryTime>=5.1)this.event('crowned','CHIEF EXECUTIVE OFFICER');this.updateParticles(dt);return;}if(this.state!=='playing')return;
   this.time+=dt;this.invincible=Math.max(0,this.invincible-dt);this.gulp=Math.max(0,this.gulp-dt);this.release=Math.max(0,this.release-dt);this.recoil=Math.max(0,(this.recoil||0)-dt);
   const oldX=this.x;if(input.targetX!==null&&Number.isFinite(input.targetX))this.x+=clamp(input.targetX-this.x,-670*dt,670*dt);if(input.direction)this.x+=input.direction*485*dt;this.x=clamp(this.x,this.playerMargin,W-this.playerMargin);this.walk=this.x-oldX;
-  if(['intro','phaseChange','defeated'].includes(this.review?.phase)){this.updateReview(dt);this.updateParticles(dt);return;}
+  if(['intro','defeated'].includes(this.review?.phase)){this.updateReview(dt);this.updateParticles(dt);return;}
   this.timeLeft=Math.max(0,this.timeLeft-dt);if(this.timeLeft<=0){this.fail('deadline');return;}
   this.updateReview(dt);if(this.state!=='playing')return;
   const oldBossX=this.throwerX,pace=this.time*(1.2+this.level*.025),position=W/2+Math.sin(pace)*173+Math.sin(pace*2.3+this.level)*27;
