@@ -1,4 +1,5 @@
 import {MANAGER_TIMING,managerReleasePoint} from './manager-animation.js';
+import {PROMOTION_DURATION,FAILURE_DURATION,careerBulk} from './career.js';
 export const W=540,H=660,CATCH_Y=564;
 export const clamp=(v,min,max)=>Math.max(min,Math.min(max,v));
 const titles=['Unpaid Intern','Paid Intern','Office Assistant','Junior Associate','Associate','Senior Associate','Team Lead','Assistant Manager','Manager','Senior Manager','Department Head','Associate Director','Director','Senior Director','Vice President','Senior Vice President','Executive VP','Chief of Staff','Chief Operating Officer','Chief Executive Officer'];
@@ -21,13 +22,15 @@ export const REVIEWS={
 export const LEVELS=titles.map((title,i)=>({title,memo:memos[i],office:OFFICES.findIndex(o=>i>=o.first&&i<=o.last),outfit:Math.min(3,Math.floor(i/5)),review:REVIEWS[i]||null,quota:REVIEWS[i]?.charge??10+Math.floor(i*.72),streak:i>=10?4:i>=3?3:1,speed:225+i*10,interval:Math.max(.44,.86-i*.021),hazard:Math.min(.34,.13+i*.011),wind:i>=3?(i%2?1:-1)*(28+i*2):0,gold:.055,deadline:i===19?180:REVIEWS[i]?110:30-Math.floor(i*.28),twist:REVIEWS[i]?.intro??(i===0?'CATCH THE QUOTA BEFORE TIME RUNS OUT.':i===3?'KEEP A STREAK. BEAT THE DEADLINE.':`FLOOR ${String(i+1).padStart(2,'0')} · ${title.toUpperCase()}`)}));
 export function normalizeSave(raw){if(!raw||typeof raw!=='object')return {level:0,score:0,best:0,won:false};const integer=(n,max)=>Number.isFinite(n)?clamp(Math.floor(n),0,max):0;return {level:integer(raw.level,19),score:integer(raw.score,99999999),best:integer(raw.best,99999999),won:raw.won===true};}
 export class Game {
- constructor(random=Math.random){this.random=random;this.height=H;this.state='ready';this.level=0;this.score=0;this.lives=3;this.quota=0;this.combo=0;this.x=W/2;this.bossX=W/2;this.time=0;this.drops=[];this.particles=[];this.events=[];this.shots=[];this.hitCount=0;this.invincible=0;this.gulp=0;this.release=0;this.windup=0;this.victoryTime=0;this.review=null;this.zones=[];this.timeLeft=42;this.managerX=W/2;}
+ constructor(random=Math.random){this.random=random;this.height=H;this.state='ready';this.level=0;this.score=0;this.lives=3;this.quota=0;this.combo=0;this.x=W/2;this.bossX=W/2;this.time=0;this.drops=[];this.particles=[];this.events=[];this.shots=[];this.hitCount=0;this.invincible=0;this.gulp=0;this.release=0;this.windup=0;this.victoryTime=0;this.review=null;this.zones=[];this.timeLeft=42;this.managerX=W/2;this.messes=[];this.missedCount=0;this.failureTime=0;this.promotionTime=0;this.promotionDuration=PROMOTION_DURATION;}
  get throwerX(){return this.review&&this.level!==19?this.managerX:this.bossX;}
+ get playerMargin(){return 30+careerBulk(this.level)*5;}
  get catchY(){return this.height-96;}
  get flightScale(){return (this.catchY-104)/(CATCH_Y-104);}
  resize(height){const next=clamp(Math.round(height),420,1500),ratio=(next-200)/(this.height-200);for(const d of this.drops){d.y=104+(d.y-104)*ratio;d.vy*=ratio;}for(const s of this.shots)s.y=68+(s.y-68)*ratio;for(const p of this.particles)p.y=104+(p.y-104)*ratio;this.height=next;}
  start(level=0,score=0,lives=3){
   this.level=clamp(level,0,19);this.score=score;this.startScore=score;this.lives=lives;this.quota=0;this.combo=0;this.x=W/2;this.bossX=W/2;this.bossWalk=0;this.walk=0;this.time=0;this.drops=[];this.particles=[];this.shots=[];this.hitCount=0;this.invincible=0;this.gulp=0;this.release=0;this.windup=0;this.pendingDrop=null;this.spawnClock=.85;this.spawnCount=0;this.recoil=0;this.state='playing';this.events=[];this.victoryTime=0;this.zones=[];this.managerX=W/2;this.timeLeft=LEVELS[this.level].deadline;
+  this.messes=[];this.missedCount=0;this.failureTime=0;this.failureReason='';this.fired=false;this.promotionTime=0;this.promotionDuration=PROMOTION_DURATION;this.arrived=false;
   this.review=LEVELS[this.level].review?{...LEVELS[this.level].review,phase:'intro',timer:7,introTotal:7,warningTime:1.5,rage:false,chained:false,cycle:0,patternNow:'audit',defeatTime:0}:null;
   if(this.review)this.bossX=this.level===19?W/2:400;this.event('start',LEVELS[this.level].twist);
  }
@@ -50,8 +53,15 @@ export class Game {
   const landing=d=>{const span=W-48,raw=d.x-24+d.vx*Math.max(0,arrival(d)),v=((raw%(span*2))+span*2)%(span*2);return 24+(v>span?span*2-v:v);};
   for(let attempt=0;attempt<8;attempt++){const conflict=this.drops.find(d=>isHazard(d)!==isHazard(drop)&&arrival(d)>0&&Math.abs(arrival(d)-arrival(drop))<.24&&Math.abs(landing(d)-landing(drop))<80);if(!conflict)break;drop.vy=(this.catchY-drop.y)/(arrival(conflict)+.28);}
  }
- damage(x,y){if(this.invincible>0||this.state!=='playing')return;this.lives--;this.combo=0;this.invincible=.48;this.burst(x,y,'#ff8073',12);this.event('damage','−1 HEART');if(this.lives<=0){this.state='gameover';this.event('gameover','PERFORMANCE REVIEW: FAILED');}}
- promote(){this.state='promoted';this.score+=this.review?350:100;this.event('promoted',LEVELS[this.level+1].title,{review:!!this.review});}
+ damage(x,y,reason='file'){if(this.invincible>0||this.state!=='playing')return;this.lives--;this.combo=0;this.invincible=.48;this.burst(x,y,'#ff8073',12);this.event('damage','−1 HEART');if(this.lives<=0)this.fail(reason);}
+ fail(reason){if(this.state!=='playing')return;this.state='gameover';this.lives=0;this.failureReason=reason;this.failureTime=0;this.fired=false;this.pendingDrop=null;this.windup=0;this.release=0;this.zones=[];this.shots=[];if(this.review)this.review.phase='ended';this.event('gameover',reason==='deadline'?'DEADLINE MISSED':'YOU’RE FIRED');}
+ promote(){this.state='promoted';this.promotionTime=0;this.arrived=false;this.score+=this.review?350:100;this.pendingDrop=null;this.windup=0;this.event('promoted',LEVELS[this.level+1].title,{review:!!this.review});}
+ soilFloor(drop){
+  this.missedCount++;const x=clamp(drop.x,18,W-18),near=this.messes.find(m=>Math.abs(m.x-x)<25);
+  if(near){near.size=Math.min(85,near.size+7);near.age=0;near.gold=near.gold&&drop.type==='gold';}
+  else {this.messes.push({x,size:28+(this.missedCount*7)%15,seed:this.missedCount*1.73,age:0,gold:drop.type==='gold'});if(this.messes.length>48)this.messes.shift();}
+  this.burst(x,this.height-15,drop.type==='gold'?'#c09b45':'#9e6a37',8);this.event('splat');
+ }
  catchDrop(d){
   if(d.type==='file'){this.damage(d.x,d.y);return;}if(d.type==='money'){this.lives=Math.min(3,this.lives+1);this.score+=25;this.burst(d.x,d.y,'#8ee696');this.event('money','PAYDAY +1 ♥');return;}
   const value=d.type==='gold'?3:1;this.quota+=value;this.combo++;const multiplier=Math.min(4,1+Math.floor((this.combo-1)/5)),points=(d.type==='gold'?75:25)*multiplier;this.score+=points;this.gulp=.23;this.burst(d.x,d.y,d.type==='gold'?'#ffdc62':'#d2f86a');this.event('catch',`+${points}`,{x:d.x,y:d.y,multiplier,itemType:d.type});
@@ -80,11 +90,14 @@ export class Game {
   if(b.phase==='attack'){if(b.patternNow==='sweep'){const progress=1-b.timer/b.attack;b.safeX=b.sweepDirection===1?110+320*progress:430-320*progress;this.sweepZones();}if(!b.attacked&&this.zones.some(z=>Math.abs(this.x-z.x)<z.width/2+13)){const before=this.lives;this.damage(this.x,this.catchY);if(this.lives<before)b.attacked=true;}}
  }
  update(dt,input={}){
-  dt=clamp(dt,0,.04);if(this.state==='victory'){const before=this.victoryTime;this.victoryTime+=dt;if(before<5.1&&this.victoryTime>=5.1)this.event('crowned','CHIEF EXECUTIVE OFFICER');this.updateParticles(dt);return;}if(this.state!=='playing')return;
+  dt=clamp(dt,0,.04);
+  if(this.state==='promoted'){const before=this.promotionTime/this.promotionDuration;this.promotionTime+=dt;const after=this.promotionTime/this.promotionDuration;if(before<.22&&after>=.22)this.event('elevatorClose');if(before<.66&&after>=.66)this.event('elevatorDing');if(after>=1&&!this.arrived){this.arrived=true;this.event('arrived');}this.updateParticles(dt);return;}
+  if(this.state==='gameover'){this.failureTime+=dt;if(this.failureTime>=FAILURE_DURATION&&!this.fired){this.fired=true;this.event('fired');}this.updateParticles(dt);return;}
+  if(this.state==='victory'){const before=this.victoryTime;this.victoryTime+=dt;if(before<5.1&&this.victoryTime>=5.1)this.event('crowned','CHIEF EXECUTIVE OFFICER');this.updateParticles(dt);return;}if(this.state!=='playing')return;
   this.time+=dt;this.invincible=Math.max(0,this.invincible-dt);this.gulp=Math.max(0,this.gulp-dt);this.release=Math.max(0,this.release-dt);this.recoil=Math.max(0,(this.recoil||0)-dt);
-  const oldX=this.x;if(input.targetX!==null&&Number.isFinite(input.targetX))this.x+=clamp(input.targetX-this.x,-670*dt,670*dt);if(input.direction)this.x+=input.direction*485*dt;this.x=clamp(this.x,30,W-30);this.walk=this.x-oldX;
+  const oldX=this.x;if(input.targetX!==null&&Number.isFinite(input.targetX))this.x+=clamp(input.targetX-this.x,-670*dt,670*dt);if(input.direction)this.x+=input.direction*485*dt;this.x=clamp(this.x,this.playerMargin,W-this.playerMargin);this.walk=this.x-oldX;
   if(['intro','phaseChange','defeated'].includes(this.review?.phase)){this.updateReview(dt);this.updateParticles(dt);return;}
-  this.timeLeft=Math.max(0,this.timeLeft-dt);if(this.timeLeft<=0){this.lives=0;this.state='gameover';this.event('gameover','DEADLINE MISSED');return;}
+  this.timeLeft=Math.max(0,this.timeLeft-dt);if(this.timeLeft<=0){this.fail('deadline');return;}
   this.updateReview(dt);if(this.state!=='playing')return;
   const oldBossX=this.throwerX,pace=this.time*(1.2+this.level*.025),position=W/2+Math.sin(pace)*173+Math.sin(pace*2.3+this.level)*27;
   const manager=this.review&&this.level!==19,recovery=MANAGER_TIMING[this.releaseType==='poop'||this.releaseType==='gold'?'poopRelease':'throwRelease'];
@@ -92,7 +105,8 @@ export class Game {
   if(!this.review||this.review.phase==='open'){this.spawnClock-=dt;if(this.spawnClock<=0&&!this.pendingDrop&&(!manager||this.release<=0)){this.spawn();this.spawnClock=LEVELS[this.level].interval*(.87+this.random()*.26);}if(this.pendingDrop){this.windup=Math.max(0,this.windup-dt);if(this.windup<=0)this.releaseThrow();}}
   for(let i=this.drops.length-1;i>=0;i--){const d=this.drops[i],oldY=d.y;d.x+=d.vx*dt;d.y+=d.vy*dt;if(d.x<24||d.x>W-24){d.x=clamp(d.x,24,W-24);d.vx*=-1;}
    if(oldY<this.catchY&&d.y>=this.catchY&&Math.abs(d.x-this.x)<(d.type==='file'?35:28)){this.drops.splice(i,1);this.catchDrop(d);if(this.state!=='playing')break;continue;}
-   if(d.y>this.height+20){this.drops.splice(i,1);if(d.type==='poop'||d.type==='gold'){if(this.review){this.quota=Math.max(0,this.quota-1);this.combo=0;this.event('miss','−1 POWER');}else this.damage(clamp(d.x,15,W-15),this.height-20);}if(this.state!=='playing')break;}
+   if((d.type==='poop'||d.type==='gold')&&d.y>=this.height-15){this.drops.splice(i,1);this.soilFloor(d);if(this.review){this.quota=Math.max(0,this.quota-1);this.combo=0;this.event('miss','−1 POWER');}else this.damage(clamp(d.x,15,W-15),this.height-20,'miss');if(this.state!=='playing')break;}
+   else if(d.y>this.height+20)this.drops.splice(i,1);
   }
   if(this.state==='playing'&&this.review&&this.quota>=this.review.charge&&!this.shots.length)this.throwBack();
   if(this.state==='playing')for(let i=this.shots.length-1;i>=0;i--){const s=this.shots[i];s.t+=dt*1.7;const target=this.level===19?this.bossX:this.managerX;s.x=s.fromX+(target-s.fromX)*Math.min(1,s.t);s.y=this.catchY-(this.catchY-68)*Math.min(1,s.t);
@@ -102,5 +116,5 @@ export class Game {
   }
   this.updateParticles(dt);
  }
- updateParticles(dt){for(let i=this.particles.length-1;i>=0;i--){const p=this.particles[i];p.life-=dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=130*dt;if(p.life<=0)this.particles.splice(i,1);}}
+ updateParticles(dt){for(const mess of this.messes)mess.age+=dt;for(let i=this.particles.length-1;i>=0;i--){const p=this.particles[i];p.life-=dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=130*dt;if(p.life<=0)this.particles.splice(i,1);}}
 }

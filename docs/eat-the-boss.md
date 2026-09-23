@@ -22,3 +22,5 @@ node --test tests/eat-the-boss/*.test.mjs
 ```
 
 The homepage links to game information. The Games catalog gives each game the same card layout and a link to its own information page; the browser Play button appears on the game's information page. Catalog images, platform labels, and summaries are defined in each game's front matter. Keep the existing studio publishing workflow when updating the game.
+
+The September 23 update adds automatic elevator rides between floors, four increasing body sizes with the outfit upgrades and a larger final CEO, persistent floor splats for missed poop, and a sinking animation before the retry screen. `career.js` holds the timing/body profile, and `cinematics.js` draws the transitions. Boss instructions appear only before combat; the floor warning graphics and HUD remain visible during fights. Progress saves when a promotion is earned, and retry resets the current floor's dirt and score to the attempt's starting score.
