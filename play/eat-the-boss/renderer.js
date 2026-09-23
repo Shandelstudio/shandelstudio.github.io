@@ -1,6 +1,8 @@
 import {W,H,LEVELS,OFFICES} from './engine.js';
 import {clearSpriteMatte} from './texture.js';
 import {MANAGER_RIGS,managerPose,managerHand,managerReleasePoint} from './manager-animation.js';
+import {careerBulk,bodyWidthAt} from './career.js';
+import {drawElevator,drawFailure} from './cinematics.js';
 const DEFINITIONS={
  employee:['assets/sprites.png',141,60,358,645],boss:['assets/sprites.png',654,80,555,626],poop:['assets/sprites.png',122,783,432,410],gold:['assets/sprites.png',705,783,436,410],
  outfit0:['assets/career-outfits.png',165,13,325,604],outfit1:['assets/career-outfits.png',741,13,323,604],outfit2:['assets/career-outfits.png',161,627,340,607],outfit3:['assets/career-outfits.png',731,627,339,608],
@@ -73,11 +75,20 @@ export class Renderer {
   if(this.transition>0){c.globalAlpha=this.transition;const before=this.scene(this.previousLevel);if(before)c.drawImage(before,0,0);c.globalAlpha=1;this.transition=Math.max(0,this.transition-dt*1.6);}
  }
  sprite(name,x,y,w,h,rotation=0,alpha=1,flip=false){const img=this.textures.get(name);if(!img)return;const c=this.ctx;c.save();c.translate(x,y);c.rotate(rotation);c.globalAlpha*=alpha;if(flip)c.scale(-1,1);c.drawImage(img,-w/2,-h/2,w,h);c.restore();}
- employee(x,y,t,reflection=false){
-  const g=this.game,c=this.ctx,key=`outfit${LEVELS[g.level].outfit}`,img=this.textures.get(key);if(!img)return;const w=60,h=111,moving=g.state==='playing'&&Math.abs(g.walk||0)>.1&&!this.reduced,cycle=t*23,stride=moving?Math.sin(cycle):0;
+ careerTexture(key,bulk){
+  const source=this.textures.get(key);if(!source||!bulk)return source;
+  this.careerTextures??=new Map();const cacheKey=`${key}:${bulk}`;if(this.careerTextures.has(cacheKey))return this.careerTextures.get(cacheKey);
+  const shapeBulk=key==='seated'?bulk*.6:bulk,layer=document.createElement('canvas');layer.width=Math.ceil(source.width*(1+shapeBulk*.44*.45));layer.height=source.height;const c=layer.getContext('2d');c.imageSmoothingEnabled=false;
+  // Widen the torso; move the arms out with it without stretching their length.
+  const side=source.width*.275,center=source.width*.45;
+  for(let y=0;y<source.height;y+=3){const height=Math.min(3,source.height-y),belly=center*bodyWidthAt((y+height/2)/source.height,shapeBulk),left=(layer.width-belly)/2;c.drawImage(source,0,y,side,height,left-side,y,side,height);c.drawImage(source,side,y,center,height,left,y,belly,height);c.drawImage(source,side+center,y,side,height,left+belly,y,side,height);}
+  this.careerTextures.set(cacheKey,layer);return layer;
+ }
+ employee(x,y,t,reflection=false,options={}){
+  const g=this.game,c=this.ctx,level=options.level??g.level,bulk=careerBulk(level),key=`outfit${LEVELS[level].outfit}`,img=this.careerTexture(key,bulk);if(!img)return;const w=60*img.width/this.textures.get(key).width,h=111,moving=(options.moving??(g.state==='playing'&&Math.abs(g.walk||0)>.1))&&!this.reduced,cycle=t*(23-bulk*2),stride=moving?Math.sin(cycle):0;
   c.save();c.translate(x,y+(moving?-Math.abs(stride)*3:Math.sin(t*2)*.7));if(reflection){c.scale(1,-.26);c.globalAlpha=.1;}
   c.rotate(this.reduced?0:moving?Math.sign(g.walk)*.035:0);const split=.60,upper=img.height*split,hip=-h/2+h*split;
-  for(const side of [-1,1]){c.save();c.translate(side*w*.25,hip-1);c.rotate(stride*side*.28);c.drawImage(img,side===1?img.width/2:0,upper,img.width/2,img.height-upper,-w*.25,0,w/2,h*(1-split)+1);c.restore();}
+  for(const side of [-1,1]){c.save();c.translate(side*w*.25,hip-1);c.rotate(stride*side*.28/(1+bulk*.2));c.drawImage(img,side===1?img.width/2:0,upper,img.width/2,img.height-upper,-w*.25,0,w/2,h*(1-split)+1);c.restore();}
   c.drawImage(img,0,0,img.width,upper,-w/2,-h/2,w,h*split+1);c.restore();
  }
  boss(t){
@@ -135,22 +146,28 @@ export class Renderer {
  }
  file(d){const c=this.ctx;c.save();c.translate(d.x,d.y);c.rotate(d.rotation||0);c.fillStyle='#733049';c.fillRect(-15,-18,33,41);c.fillStyle='#e5707d';c.fillRect(-18,-21,33,41);c.fillStyle='#ffd2c9';c.fillRect(-12,-14,18,3);c.fillRect(-12,-7,20,2);c.fillStyle='#703040';c.font='bold 8px monospace';c.textAlign='center';c.fillText('FIRED',-1,10);c.restore();}
  money(d){const c=this.ctx;c.save();c.translate(d.x,d.y);c.rotate(d.rotation||-.12);c.fillStyle='#173e32';c.fillRect(-20,-10,40,26);c.fillStyle='#31835a';c.fillRect(-21,-13,40,26);c.fillStyle='#97e58e';c.fillRect(-20,-16,40,25);c.strokeStyle='#215b3b';c.lineWidth=2;c.strokeRect(-17,-13,34,19);c.fillStyle='#c5f4ac';c.beginPath();c.ellipse(0,-3,9,10,0,0,Math.PI*2);c.fill();c.fillStyle='#225638';c.font='bold 19px monospace';c.textAlign='center';c.fillText('$',0,4);c.fillRect(-14,-5,4,4);c.fillRect(10,-5,4,4);c.restore();}
+ floorMess(){
+  const g=this.game,c=this.ctx;for(const m of g.messes){const spread=this.reduced?1:Math.min(1,m.age*5),width=m.size*(.6+spread*.4),yy=g.height-7+Math.sin(m.seed)*6;c.save();c.translate(m.x,yy);c.fillStyle=m.gold?'#725329':'#382417';c.beginPath();c.ellipse(0,3,width+4,8+spread*3,0,0,Math.PI*2);c.fill();
+   for(let i=0;i<6;i++){const a=i*1.8+m.seed,px=Math.cos(a)*width*.7,py=Math.sin(a)*5;c.fillStyle=m.gold?'#b18a42':'#80512c';c.beginPath();c.ellipse(px,py,width*.48,6+(1-spread)*9,0,0,Math.PI*2);c.fill();c.fillStyle=m.gold?'#e4bc60':'#ad7943';c.fillRect(px-4,py-2,7,2);}
+   if(m.age<.35&&!this.reduced)for(let i=0;i<5;i++){const p=m.age/.35,px=(i-2)*width*.6*p,py=-Math.sin(p*Math.PI)*(12+i%2*8);c.fillStyle='#966133';c.fillRect(px,py,4,4);}c.restore();
+  }
+ }
  finale(dt,t){
   const g=this.game,c=this.ctx,h=g.height,v=g.victoryTime,ease=n=>1-Math.pow(1-Math.max(0,Math.min(1,n)),3),rise=ease((v-1.55)/2.4),close=ease((v-3.7)/1.5),zoom=1+close*1.55;
   c.save();c.translate(W/2,close*(h*.40-102*zoom));c.scale(zoom,zoom);c.translate(-W/2,0);this.office(dt,t);
   if(v<1.9)this.boss(t);
   const x=g.x+(W/2-g.x)*rise,ground=h-9-(h-115)*rise,bounce=v<1.5&&!this.reduced?Math.abs(Math.sin(v*8))*9:0;
   if(v>1.4&&v<4.2){const glow=c.createLinearGradient(0,ground-125,0,ground+20);glow.addColorStop(0,'#f8dc8100');glow.addColorStop(.7,'#f8dc8130');glow.addColorStop(1,'#f8dc8100');c.fillStyle=glow;c.fillRect(x-40,ground-125,80,150);if(!this.reduced)for(let i=0;i<9;i++){c.fillStyle='#f9d87a';c.fillRect(x-28+(i*17)%58,ground-((v*90+i*23)%120),3,5);}}
-  let key=v<1.55?'cheer':v<4.8?'adjust':v<5.9?'seated':'ceo';const img=this.textures.get(key),heroH=key==='adjust'?110:key==='cheer'?115:108,heroW=img?img.width/img.height*heroH:70;
-  this.sprite(key,x,ground-heroH/2-bounce,heroW,heroH,this.reduced?0:v<1.55?Math.sin(v*7)*.04:0);
+  let key=v<1.55?'cheer':v<4.8?'adjust':'seated';const img=this.careerTexture(key,careerBulk(g.level,true)),heroH=key==='adjust'?110:key==='cheer'?115:108,heroW=img?img.width/img.height*heroH:70;
+  if(img){c.save();c.translate(x,ground-heroH/2-bounce);c.rotate(this.reduced?0:v<1.55?Math.sin(v*7)*.04:0);c.drawImage(img,-heroW/2,-heroH/2,heroW,heroH);c.restore();}
   if(v>5.1){c.fillStyle='#252035';c.fillRect(W/2-43,113,86,21);c.fillStyle='#e8c875';c.fillRect(W/2-41,115,82,17);c.fillStyle='#302538';c.font='bold 9px monospace';c.textAlign='center';c.fillText('CHIEF EXECUTIVE',W/2,126);}
   c.restore();
   if(v>.35&&v<.62&&!this.reduced){c.fillStyle=`rgba(255,222,145,${(.62-v)*.7})`;c.fillRect(0,0,W,this.viewHeight);}
   if(v>5.1&&!this.reduced){const age=v-5.1;for(let i=0;i<58;i++){c.fillStyle=['#f7da88','#ff947c','#e8e9dc','#c5ea7c'][i%4];const y=(age*(60+i%5*12)+i*37)%(this.viewHeight+90)-50;c.save();c.translate((i*83+Math.sin(age*2+i)*20)%W,y);c.rotate(age*(i%2?1:-1));c.fillRect(-2,-4,4,8);c.restore();}}
  }
  paint(dt,t){
-  const g=this.game,c=this.ctx,h=g.height;c.setTransform(this.dpr,0,0,this.dpr,0,0);c.imageSmoothingEnabled=false;c.clearRect(0,0,W,this.viewHeight);c.fillStyle='#101829';c.fillRect(0,0,W,this.viewHeight);if(!this.ready)return;if(g.state==='victory'){this.finale(dt,t);return;}
-  this.office(dt,t);this.reviewZones(t);this.boss(t);
+  const g=this.game,c=this.ctx,h=g.height;c.setTransform(this.dpr,0,0,this.dpr,0,0);c.imageSmoothingEnabled=false;c.clearRect(0,0,W,this.viewHeight);c.fillStyle='#101829';c.fillRect(0,0,W,this.viewHeight);if(!this.ready)return;if(g.state==='victory'){this.finale(dt,t);return;}if(g.state==='promoted'){drawElevator(this,dt,t);return;}if(g.state==='gameover'){drawFailure(this,dt,t);return;}
+  this.office(dt,t);this.floorMess();this.reviewZones(t);this.boss(t);
   for(const d of g.drops){if(d.type==='file')this.file({...d,rotation:d.rotation+Math.sin(t*4+d.phase)*.13});else if(d.type==='money')this.money(d);else this.sprite(d.type,d.x,d.y,32,30,d.rotation);}
   for(const shot of g.shots)this.sprite('poop',shot.x,shot.y,42,39,shot.t*9);
   let px=g.x,py=h-65;if(g.state==='victory'){const lift=Math.max(0,Math.min(1,(g.victoryTime-.6)/1.4)),eased=1-Math.pow(1-lift,3);px=g.x+(W/2-g.x)*eased;py=h-65-(h-112)*eased;}
