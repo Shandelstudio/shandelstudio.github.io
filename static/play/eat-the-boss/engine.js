@@ -1,5 +1,6 @@
 import {MANAGER_TIMING,managerReleasePoint} from './manager-animation.js';
 import {PROMOTION_DURATION,FAILURE_DURATION,careerBulk} from './career.js';
+import {CHALLENGES,CHALLENGE_FAILURE_DURATION,updateEmailChallenge} from './challenges.js';
 export const W=540,H=660,CATCH_Y=564;
 export const clamp=(v,min,max)=>Math.max(min,Math.min(max,v));
 const titles=['Unpaid Intern','Paid Intern','Office Assistant','Junior Associate','Associate','Senior Associate','Team Lead','Assistant Manager','Manager','Senior Manager','Department Head','Associate Director','Director','Senior Director','Vice President','Senior Vice President','Executive VP','Chief of Staff','Chief Operating Officer','Chief Executive Officer'];
@@ -29,31 +30,36 @@ export class Game {
  get flightScale(){return (this.catchY-104)/(CATCH_Y-104);}
  resize(height){const next=clamp(Math.round(height),420,1500),ratio=(next-200)/(this.height-200);for(const d of this.drops){d.y=104+(d.y-104)*ratio;d.vy*=ratio;}for(const s of this.shots)s.y=68+(s.y-68)*ratio;for(const p of this.particles)p.y=104+(p.y-104)*ratio;this.height=next;}
  start(level=0,score=0,lives=3){
+  this.mode='career';this.challengeId=null;this.elapsed=0;this.challengeReady=0;this.dodged=0;
   this.level=clamp(level,0,19);this.score=score;this.startScore=score;this.lives=lives;this.quota=0;this.combo=0;this.x=W/2;this.bossX=W/2;this.bossWalk=0;this.walk=0;this.time=0;this.drops=[];this.particles=[];this.shots=[];this.hitCount=0;this.invincible=0;this.gulp=0;this.release=0;this.windup=0;this.pendingDrop=null;this.spawnClock=.85;this.spawnCount=0;this.recoil=0;this.state='playing';this.events=[];this.victoryTime=0;this.zones=[];this.managerX=W/2;this.timeLeft=LEVELS[this.level].deadline;
   this.messes=[];this.missedCount=0;this.failureTime=0;this.failureReason='';this.fired=false;this.promotionTime=0;this.promotionDuration=PROMOTION_DURATION;this.arrived=false;
   this.review=LEVELS[this.level].review?{...LEVELS[this.level].review,phase:'intro',timer:7,introTotal:7,warningTime:1.5,rage:false,chained:false,cycle:0,patternNow:'audit',defeatTime:0}:null;
   if(this.review)this.bossX=this.level===19?W/2:400;this.event('start',LEVELS[this.level].twist);
  }
  event(type,text='',extra={}){this.events.push({type,text,...extra});}
+ startChallenge(id='email-overload'){
+  const challenge=CHALLENGES.find(c=>c.id===id);if(!challenge)throw new RangeError('Unknown challenge');
+  this.start(6,0,challenge.lives);this.mode='challenge';this.challengeId=id;this.challengeReady=3;this.timeLeft=0;this.spawnClock=.15;this.events=[];this.event('challengeStart');
+ }
  burst(x,y,color,count=10){for(let i=0;i<count;i++){const a=this.random()*Math.PI*2,speed=35+this.random()*125;this.particles.push({x,y,vx:Math.cos(a)*speed,vy:Math.sin(a)*speed,color,life:.5+this.random()*.35});}}
  spawn(){
   if(this.pendingDrop)return;const c=LEVELS[this.level],r=this.random(),hazard=this.review?.phase==='open'?c.hazard*(this.review.rage?.94:.7):c.hazard,money=this.level>=2?.022:0;
-  const type=r<hazard?'file':r<hazard+money?'money':r<hazard+money+c.gold?'gold':'poop';
+  const type=r<hazard?'email':r<hazard+money?'money':r<hazard+money+c.gold?'gold':'poop';
   this.pendingDrop={type,vx:c.wind*(.7+this.random()*.6)*(this.review?.rage?1.25:1)*(this.review?.patternNow==='budget'&&this.review.cycle%2?-1:1),speed:c.speed*(.92+this.random()*.16)*(this.review?.rage?1.14:1)};
   const poop=type==='poop'||type==='gold';this.windup=this.review&&this.level!==19?(poop?MANAGER_TIMING.poopWindup:MANAGER_TIMING.throwWindup):(poop?.46:.34);
  }
  releaseThrow(){
   const p=this.pendingDrop;if(!p)return;const manager=this.review&&this.level!==19,origin=manager?managerReleasePoint(this.review.sprite,p.type):{x:28,y:-1};
   const drop={x:clamp(this.throwerX+origin.x,24,W-24),y:101+origin.y,vx:p.vx,vy:p.speed*this.flightScale,type:p.type,phase:this.random()*6.28,rotation:(this.random()-.5)*.5};this.spaceHazard(drop);this.drops.push(drop);this.spawnCount++;
-  if(!this.review&&this.level>=6&&this.spawnCount%4===0&&p.type!=='file'){const decoy={...drop,type:'file',x:clamp(drop.x+(drop.x<W/2?96:-96),25,W-25),vy:drop.vy*.83};this.spaceHazard(decoy);this.drops.push(decoy);}
+  if(!this.review&&this.level>=6&&this.spawnCount%4===0&&p.type!=='email'){const decoy={...drop,type:'email',x:clamp(drop.x+(drop.x<W/2?96:-96),25,W-25),vy:drop.vy*.83};this.spaceHazard(decoy);this.drops.push(decoy);}
   const poop=drop.type==='poop'||drop.type==='gold';this.pendingDrop=null;this.releaseType=drop.type;this.release=manager?(poop?MANAGER_TIMING.poopRelease:MANAGER_TIMING.throwRelease):(poop?.38:.24);this.event('release','',{x:drop.x,y:drop.y,itemType:drop.type});
  }
  spaceHazard(drop){
-  const isHazard=d=>d.type==='file',arrival=d=>(this.catchY-d.y)/d.vy;
+  const isHazard=d=>d.type==='email',arrival=d=>(this.catchY-d.y)/d.vy;
   const landing=d=>{const span=W-48,raw=d.x-24+d.vx*Math.max(0,arrival(d)),v=((raw%(span*2))+span*2)%(span*2);return 24+(v>span?span*2-v:v);};
   for(let attempt=0;attempt<8;attempt++){const conflict=this.drops.find(d=>isHazard(d)!==isHazard(drop)&&arrival(d)>0&&Math.abs(arrival(d)-arrival(drop))<.24&&Math.abs(landing(d)-landing(drop))<80);if(!conflict)break;drop.vy=(this.catchY-drop.y)/(arrival(conflict)+.28);}
  }
- damage(x,y,reason='file'){if(this.invincible>0||this.state!=='playing')return;this.lives--;this.combo=0;this.invincible=.48;this.burst(x,y,'#ff8073',12);this.event('damage','−1 HEART');if(this.lives<=0)this.fail(reason);}
+ damage(x,y,reason='email'){if(this.invincible>0||this.state!=='playing')return;this.lives--;this.combo=0;this.invincible=this.mode==='challenge'?.85:.48;this.burst(x,y,'#ff8073',12);this.event('damage','−1 HEART');if(this.lives<=0)this.fail(reason);}
  fail(reason){if(this.state!=='playing')return;this.state='gameover';this.lives=0;this.failureReason=reason;this.failureTime=0;this.fired=false;this.pendingDrop=null;this.windup=0;this.release=0;this.zones=[];this.shots=[];if(this.review)this.review.phase='ended';this.event('gameover',reason==='deadline'?'DEADLINE MISSED':'YOU’RE FIRED');}
  promote(){this.state='promoted';this.promotionTime=0;this.arrived=false;this.score+=this.review?350:100;this.pendingDrop=null;this.windup=0;this.event('promoted',LEVELS[this.level+1].title,{review:!!this.review});}
  soilFloor(drop){
@@ -63,7 +69,7 @@ export class Game {
   this.burst(x,this.height-15,drop.type==='gold'?'#c09b45':'#9e6a37',8);this.event('splat');
  }
  catchDrop(d){
-  if(d.type==='file'){this.damage(d.x,d.y);return;}if(d.type==='money'){this.lives=Math.min(3,this.lives+1);this.score+=25;this.burst(d.x,d.y,'#8ee696');this.event('money','PAYDAY +1 ♥');return;}
+  if(d.type==='email'){this.damage(d.x,d.y);return;}if(d.type==='money'){this.lives=Math.min(3,this.lives+1);this.score+=25;this.burst(d.x,d.y,'#8ee696');this.event('money','PAYDAY +1 ♥');return;}
   const value=d.type==='gold'?3:1;this.quota+=value;this.combo++;const multiplier=Math.min(4,1+Math.floor((this.combo-1)/5)),points=(d.type==='gold'?75:25)*multiplier;this.score+=points;this.gulp=.23;this.gulpColor=d.type==='gold'?'#c09b45':'#9e6a37';this.burst(d.x,d.y,this.gulpColor);this.event('catch','',{x:d.x,y:d.y,multiplier,itemType:d.type});
   const c=LEVELS[this.level];if(this.review)this.quota=Math.min(c.quota,this.quota);else if(this.quota>=c.quota&&this.combo>=c.streak)this.promote();
  }
@@ -73,7 +79,7 @@ export class Game {
   if(p==='audit'){this.zones=[{x:clamp(this.x,60,W-60),width:this.level===19?(b.rage?164:140):110}];this.event('warning','AUDIT INCOMING · LEAVE THE MARKED LANE');}
   else if(p==='budget'){b.safeLane=(b.cycle+1)%3;this.zones=[0,1,2].filter(i=>i!==b.safeLane).map(i=>({x:90+i*180,width:176}));this.event('warning','BUDGET FREEZE · MOVE INTO THE CLEAR LANE');}
   else {b.sweepDirection=b.cycle%2?1:-1;b.safeX=b.sweepDirection===1?110:430;this.sweepZones();this.event('warning','RESTRUCTURING · FOLLOW THE MOVING GAP');}
-  this.drops=this.drops.filter(d=>d.type!=='file');this.pendingDrop=null;this.windup=0;
+  this.drops=this.drops.filter(d=>d.type!=='email');this.pendingDrop=null;this.windup=0;
  }
  sweepZones(){const b=this.review,gap=this.level===19?(b.rage?114:132):152,left=Math.max(0,b.safeX-gap/2),right=Math.min(W,b.safeX+gap/2);this.zones=[{x:left/2,width:left},{x:(W+right)/2,width:W-right}];}
  enrage(){const b=this.review;b.rage=true;b.open=3.15;b.attack=1.7;b.warningTime=1.05;b.chained=false;b.phase='open';b.timer=b.open;this.zones=[];this.spawnClock=Math.min(this.spawnClock,.08);this.event('enrage');}
@@ -92,10 +98,11 @@ export class Game {
  update(dt,input={}){
   dt=clamp(dt,0,.04);
   if(this.state==='promoted'){const before=this.promotionTime/this.promotionDuration;this.promotionTime+=dt;const after=this.promotionTime/this.promotionDuration;if(before<.22&&after>=.22)this.event('elevatorClose');if(before<.66&&after>=.66)this.event('elevatorDing');if(after>=1&&!this.arrived){this.arrived=true;this.event('arrived');}this.updateParticles(dt);return;}
-  if(this.state==='gameover'){this.failureTime+=dt;if(this.failureTime>=FAILURE_DURATION&&!this.fired){this.fired=true;this.event('fired');}this.updateParticles(dt);return;}
+  if(this.state==='gameover'){this.failureTime+=dt;if(this.failureTime>=(this.mode==='challenge'?CHALLENGE_FAILURE_DURATION:FAILURE_DURATION)&&!this.fired){this.fired=true;this.event('fired');}this.updateParticles(dt);return;}
   if(this.state==='victory'){const before=this.victoryTime;this.victoryTime+=dt;if(before<5.1&&this.victoryTime>=5.1)this.event('crowned','CHIEF EXECUTIVE OFFICER');this.updateParticles(dt);return;}if(this.state!=='playing')return;
   this.time+=dt;this.invincible=Math.max(0,this.invincible-dt);this.gulp=Math.max(0,this.gulp-dt);this.release=Math.max(0,this.release-dt);this.recoil=Math.max(0,(this.recoil||0)-dt);
   const oldX=this.x;if(input.targetX!==null&&Number.isFinite(input.targetX))this.x+=clamp(input.targetX-this.x,-670*dt,670*dt);if(input.direction)this.x+=input.direction*485*dt;this.x=clamp(this.x,this.playerMargin,W-this.playerMargin);this.walk=this.x-oldX;
+  if(this.mode==='challenge'){updateEmailChallenge(this,dt,oldX,W);this.updateParticles(dt);return;}
   if(['intro','defeated'].includes(this.review?.phase)){this.updateReview(dt);this.updateParticles(dt);return;}
   this.timeLeft=Math.max(0,this.timeLeft-dt);if(this.timeLeft<=0){this.fail('deadline');return;}
   this.updateReview(dt);if(this.state!=='playing')return;
@@ -104,7 +111,7 @@ export class Game {
   if(!this.pendingDrop){if(manager){if(this.review.phase==='open'&&this.release<=recovery-.12)this.managerX+=clamp(position-this.managerX,-230*dt,230*dt);}else this.bossX=position;}this.bossWalk=this.throwerX-oldBossX;
   if(!this.review||this.review.phase==='open'){this.spawnClock-=dt;if(this.spawnClock<=0&&!this.pendingDrop&&(!manager||this.release<=0)){this.spawn();this.spawnClock=LEVELS[this.level].interval*(.87+this.random()*.26);}if(this.pendingDrop){this.windup=Math.max(0,this.windup-dt);if(this.windup<=0)this.releaseThrow();}}
   for(let i=this.drops.length-1;i>=0;i--){const d=this.drops[i],oldY=d.y;d.x+=d.vx*dt;d.y+=d.vy*dt;if(d.x<24||d.x>W-24){d.x=clamp(d.x,24,W-24);d.vx*=-1;}
-   if(oldY<this.catchY&&d.y>=this.catchY&&Math.abs(d.x-this.x)<(d.type==='file'?35:28)){this.drops.splice(i,1);this.catchDrop(d);if(this.state!=='playing')break;continue;}
+   if(oldY<this.catchY&&d.y>=this.catchY&&Math.abs(d.x-this.x)<(d.type==='email'?35:28)){this.drops.splice(i,1);this.catchDrop(d);if(this.state!=='playing')break;continue;}
    if((d.type==='poop'||d.type==='gold')&&d.y>=this.height-15){this.drops.splice(i,1);this.soilFloor(d);if(this.review){this.quota=Math.max(0,this.quota-1);this.combo=0;this.event('miss','−1 POWER');}else this.damage(clamp(d.x,15,W-15),this.height-20,'miss');if(this.state!=='playing')break;}
    else if(d.y>this.height+20)this.drops.splice(i,1);
   }

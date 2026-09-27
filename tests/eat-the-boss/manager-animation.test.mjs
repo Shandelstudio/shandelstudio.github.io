@@ -4,7 +4,7 @@ import {Game} from '../../static/play/eat-the-boss/engine.js';
 import {MANAGER_TIMING,MANAGER_RIGS,managerPose,managerHand} from '../../static/play/eat-the-boss/manager-animation.js';
 
 test('each manager releases cash and files from the animated hand and plants their feet for release',()=>{
- for(const [sprite,floor] of [4,9,14].entries())for(const type of ['money','file']){
+ for(const [sprite,floor] of [4,9,14].entries())for(const type of ['money','email']){
   const g=new Game();g.start(floor);g.review.phase='open';g.review.timer=20;g.managerX=270;g.spawnClock=99;
   g.pendingDrop={type,vx:0,speed:250};g.windup=0;
   const before=managerPose(g),width=MANAGER_RIGS[sprite].height*[374/746,379/728,660/702][sprite],hand=managerHand(sprite,width,before);
@@ -23,11 +23,11 @@ test('recovery finishes before another throw, and managers keep moving between t
 });
 
 test('crouching and overhand throws use distinct poses and settle back to idle',()=>{
- const g=new Game();g.start(4);g.review.phase='open';g.pendingDrop={type:'file'};g.windup=MANAGER_TIMING.throwWindup*.32;
- const raised=managerPose(g);assert.ok(raised.arm<-2);assert.equal(raised.held,'file');
+ const g=new Game();g.start(4);g.review.phase='open';g.pendingDrop={type:'email'};g.windup=MANAGER_TIMING.throwWindup*.32;
+ const raised=managerPose(g);assert.ok(raised.arm<-2);assert.equal(raised.held,'email');
  g.pendingDrop={type:'poop'};g.windup=0;const crouch=managerPose(g);assert.ok(crouch.crouch>=14);assert.equal(crouch.held,null);assert.ok(crouch.torso<-.3);
  g.pendingDrop=null;g.releaseType='poop';g.release=MANAGER_TIMING.poopRelease;const released=managerPose(g);assert.deepEqual(released.crouch,crouch.crouch);
  g.release=0;const idle=managerPose(g);assert.equal(idle.arm,0);assert.equal(idle.crouch,0);assert.equal(idle.torso,0);
- g.review.phase='warning';g.review.timer=g.review.warningTime*.32;const warning=managerPose(g);assert.ok(warning.arm<-2);assert.equal(warning.held,'file');
+ g.review.phase='warning';g.review.timer=g.review.warningTime*.32;const warning=managerPose(g);assert.ok(warning.arm<-2);assert.equal(warning.held,'email');
  const reduced=managerPose(g,true);assert.ok(Math.abs(reduced.arm)<Math.abs(warning.arm));
 });

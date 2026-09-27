@@ -40,3 +40,9 @@ export function drawFailure(r,dt,t){
  c.strokeStyle='#a97642';c.lineWidth=5;c.beginPath();for(let xx=left;xx<=right;xx+=12)c[xx===left?'moveTo':'lineTo'](xx,surface+Math.sin(xx*.053+p*13)*4+4);c.stroke();
  for(let i=0;i<9;i++){const bx=x+Math.sin(i*2.7)*spread*210,age=(g.failureTime*.9+i*.17)%1,by=surface+8+(i%3)*12;c.fillStyle='#3f2719';c.beginPath();c.ellipse(bx,by,3+age*6,2+age*3,0,0,Math.PI*2);c.fill();c.fillStyle='#b8844b';c.fillRect(bx-2,by-2,3,2);}
 }
+
+export function drawInboxFailure(r,dt,t){
+ const g=r.game,c=r.ctx,p=unit(g.failureTime/1.15),ground=g.height-10;
+ r.office(dt,t);r.boss(t);c.save();c.translate(g.x,g.height-65+ease(p)*16);c.rotate(r.reduced?0:Math.sin(p*21)*.06*(1-p));r.employee(0,0,t);c.restore();
+ for(let i=0;i<16;i++){const progress=r.reduced?1:ease((p-i*.025)/.55),x=g.x+Math.sin(i*2.3)*52,y=ground-8-(i%4)*12-(1-progress)*170;c.save();c.globalAlpha=progress;r.email({x,y,rotation:Math.sin(i*3.1)*.4});c.restore();}
+}

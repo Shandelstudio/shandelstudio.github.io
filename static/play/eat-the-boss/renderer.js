@@ -2,8 +2,9 @@ import {W,H,LEVELS,OFFICES} from './engine.js';
 import {clearSpriteMatte} from './texture.js';
 import {MANAGER_RIGS,managerPose,managerHand,managerReleasePoint} from './manager-animation.js';
 import {careerBulk} from './career.js';
-import {drawElevator,drawFailure} from './cinematics.js';
+import {drawElevator,drawFailure,drawInboxFailure} from './cinematics.js';
 const DEFINITIONS={
+ email:['assets/email.svg',0,0,64,48],
  employee:['assets/sprites.png',141,60,358,645],boss:['assets/sprites.png',654,80,555,626],poop:['assets/sprites.png',122,783,432,410],gold:['assets/sprites.png',705,783,436,410],
  outfit0:['assets/career-outfits.png',165,13,325,604],outfit1:['assets/career-redrawn.png',140,14,281,486],outfit2:['assets/career-redrawn.png',601,15,325,486],outfit3:['assets/career-redrawn.png',1070,14,347,487],
  manager0:['assets/middle-managers.png',110,22,374,746],manager1:['assets/middle-managers.png',755,40,379,728],manager2:['assets/middle-managers.png',1288,66,660,702],
@@ -20,7 +21,7 @@ export class Renderer {
   for(const [name,d] of Object.entries(DEFINITIONS)){
    const layer=document.createElement('canvas');layer.width=d[3];layer.height=d[4];const c=layer.getContext('2d',{willReadFrequently:true});c.drawImage(this.images.get(d[0]),...d.slice(1),0,0,d[3],d[4]);
    // New atlas assets have clean native alpha; preserve their shaded fabric and metal.
-   if(!['assets/career-redrawn.png','assets/elevator.png'].includes(d[0])){const pixels=c.getImageData(0,0,layer.width,layer.height);clearSpriteMatte(pixels.data,layer.width,layer.height);c.putImageData(pixels,0,0);}
+   if(!['assets/career-redrawn.png','assets/elevator.png','assets/email.svg'].includes(d[0])){const pixels=c.getImageData(0,0,layer.width,layer.height);clearSpriteMatte(pixels.data,layer.width,layer.height);c.putImageData(pixels,0,0);}
    this.textures.set(name,layer);
   }
   this.managerRigs=MANAGER_RIGS.map((rig,i)=>{
@@ -96,10 +97,10 @@ export class Renderer {
     if(img){const squeeze=g.pendingDrop&&!this.reduced?Math.sin((1-g.windup/.46)*Math.PI)*.07:0,w=img.width*s*(1+squeeze),h=img.height*s*(1-squeeze),dx=pose==='relief'?8:0;this.sprite(pose,x+dx,foot-h/2,w,h,this.reduced?0:g.pendingDrop?Math.sin(t*43)*.014:0);}
     if(g.pendingDrop&&g.windup<.18){c.fillStyle=type==='gold'?'#ffd76a':'#bd894f';c.fillRect(x+34,82,4,6);}
    }else{
-    const pose=g.pendingDrop?(g.windup>.17?'throw0':'throw1'):g.release>0?'throw2':null;
+    const cocked=g.windup>(g.mode==='challenge'?g.challengeWindup/2:.17),pose=g.pendingDrop?(cocked?'throw0':'throw1'):g.release>0?'throw2':null;
     if(pose){const img=this.textures.get(pose),s=96/613;if(img)this.sprite(pose,x,foot-img.height*s/2,img.width*s,img.height*s,0,1,true);}
     else this.sprite('boss',x,foot-48,85,96,this.reduced?0:Math.sin(t*12)*.012);
-    if(g.pendingDrop){const heldX=x+(g.windup>.17?27:23),heldY=g.windup>.17?34:15;if(type==='file')this.file({x:heldX,y:heldY,rotation:-.2});else this.money({x:heldX,y:heldY});}
+    if(g.pendingDrop){const heldX=x+(cocked?27:23),heldY=cocked?34:15;if(type==='email')this.email({x:heldX,y:heldY,rotation:-.2});else this.money({x:heldX,y:heldY});}
     if(g.release>0){c.strokeStyle=`rgba(170,221,240,${g.release*2.2})`;c.lineWidth=2;for(let i=0;i<3;i++){c.beginPath();c.moveTo(x+27+i*7,96+i*5);c.lineTo(x+30+i*8,117+i*5);c.stroke();}}
    }
   }
@@ -117,10 +118,10 @@ export class Renderer {
   c.save();c.translate(0,hipY);c.rotate(pose.torso);c.drawImage(parts.body,0,0,img.width,sh,-w/2,-h*rig.hip,w,h*rig.hip+1);
   const sx=(rig.shoulder[0]-.5)*w,sy=(rig.shoulder[1]-rig.hip)*h;
   c.translate(sx,sy);c.rotate(pose.arm);c.drawImage(parts.arm,-rig.shoulder[0]*w,-rig.shoulder[1]*h,w,h);c.restore();
-  if(pose.held){const hand=managerHand(b.sprite,w,pose);c.save();c.translate(hand.x,hand.y);c.scale(.68,.68);const item={x:0,y:0,rotation:pose.arm+pose.torso};if(pose.held==='money')this.money(item);else this.file(item);c.restore();}
+  if(pose.held){const hand=managerHand(b.sprite,w,pose);c.save();c.translate(hand.x,hand.y);c.scale(.68,.68);const item={x:0,y:0,rotation:pose.arm+pose.torso};if(pose.held==='money')this.money(item);else this.email(item);c.restore();}
   c.restore();
   if(warning){c.fillStyle='#ffcf73';c.font='bold 21px monospace';c.textAlign='center';c.fillText('!',x-w*.6,27);}
-  if(attack){const elapsed=b.attack-b.timer,origin=managerReleasePoint(b.sprite,'file');for(const z of g.zones){if(z.width<10)continue;const travel=this.reduced?1:Math.min(1,elapsed/.32),tx=x+origin.x+(z.x-x-origin.x)*travel,ty=foot+origin.y+(g.catchY-foot-origin.y)*travel;this.file({x:tx,y:ty,rotation:travel*Math.PI*(b.sprite===2?3:.3)});if(travel===1){c.strokeStyle='#ff807377';c.lineWidth=3;c.beginPath();c.ellipse(z.x,g.catchY+42,Math.min(z.width*.38,68)*(1+(elapsed*3)%1),5,0,0,Math.PI*2);c.stroke();}}}
+  if(attack){const elapsed=b.attack-b.timer,origin=managerReleasePoint(b.sprite,'email');for(const z of g.zones){if(z.width<10)continue;const travel=this.reduced?1:Math.min(1,elapsed/.32),tx=x+origin.x+(z.x-x-origin.x)*travel,ty=foot+origin.y+(g.catchY-foot-origin.y)*travel;this.email({x:tx,y:ty,rotation:travel*Math.PI*(b.sprite===2?3:.3)});if(travel===1){c.strokeStyle='#ff807377';c.lineWidth=3;c.beginPath();c.ellipse(z.x,g.catchY+42,Math.min(z.width*.38,68)*(1+(elapsed*3)%1),5,0,0,Math.PI*2);c.stroke();}}}
   if(g.recoil>0&&!this.reduced){for(let i=0;i<3;i++){const a=t*8+i*Math.PI*2/3;c.fillStyle='#ffd66b';c.fillRect(x+Math.cos(a)*30,17+Math.sin(a)*6,4,4);}}
  }
  reviewZones(t){
@@ -133,11 +134,11 @@ export class Renderer {
    c.fillStyle=ink;for(let x=left-20;x<right+20;x+=22){c.beginPath();c.moveTo(x,top+3);c.lineTo(x+10,top+3);c.lineTo(x+18,top+13);c.lineTo(x+8,top+13);c.fill();c.beginPath();c.moveTo(x,bottom-13);c.lineTo(x+10,bottom-13);c.lineTo(x+18,bottom-3);c.lineTo(x+8,bottom-3);c.fill();}
    if(z.width>44){c.save();c.translate(z.x,top+38);c.rotate(-.07);c.strokeStyle=ink;c.lineWidth=3;c.strokeRect(-14,-12,28,24);c.fillStyle=ink;c.fillRect(-2,-7,4,9);c.fillRect(-2,5,4,4);c.restore();}
    c.restore();
-   if(attack){const elapsed=b.attack-b.timer;for(let i=0;i<Math.ceil(z.width/46);i++){const phase=this.reduced?.82:(elapsed*2.1+i*.31)%1,tx=left+20+(i*41)%Math.max(1,z.width-30),y=110+phase*(g.catchY-60);c.save();c.globalAlpha=.78;this.file({x:source+(tx-source)*Math.min(1,phase*3),y,rotation:(i%2?1:-1)*phase*.7});c.restore();}}
+   if(attack){const elapsed=b.attack-b.timer;for(let i=0;i<Math.ceil(z.width/46);i++){const phase=this.reduced?.82:(elapsed*2.1+i*.31)%1,tx=left+20+(i*41)%Math.max(1,z.width-30),y=110+phase*(g.catchY-60);c.save();c.globalAlpha=.78;this.email({x:source+(tx-source)*Math.min(1,phase*3),y,rotation:(i%2?1:-1)*phase*.7});c.restore();}}
   }
   if(b.patternNow==='sweep'){c.strokeStyle='#d2f86a';c.lineWidth=3;c.beginPath();c.moveTo(b.safeX-22,g.height-24);c.lineTo(b.safeX-5,g.height-16);c.lineTo(b.safeX+22,g.height-33);c.stroke();}
  }
- file(d){const c=this.ctx;c.save();c.translate(d.x,d.y);c.rotate(d.rotation||0);c.fillStyle='#733049';c.fillRect(-15,-18,33,41);c.fillStyle='#e5707d';c.fillRect(-18,-21,33,41);c.fillStyle='#ffd2c9';c.fillRect(-12,-14,18,3);c.fillRect(-12,-7,20,2);c.fillStyle='#703040';c.font='bold 8px monospace';c.textAlign='center';c.fillText('FIRED',-1,10);c.restore();}
+ email(d){this.sprite('email',d.x,d.y,44,33,d.rotation||0);}
  money(d){const c=this.ctx;c.save();c.translate(d.x,d.y);c.rotate(d.rotation||-.12);c.fillStyle='#173e32';c.fillRect(-20,-10,40,26);c.fillStyle='#31835a';c.fillRect(-21,-13,40,26);c.fillStyle='#97e58e';c.fillRect(-20,-16,40,25);c.strokeStyle='#215b3b';c.lineWidth=2;c.strokeRect(-17,-13,34,19);c.fillStyle='#c5f4ac';c.beginPath();c.ellipse(0,-3,9,10,0,0,Math.PI*2);c.fill();c.fillStyle='#225638';c.font='bold 19px monospace';c.textAlign='center';c.fillText('$',0,4);c.fillRect(-14,-5,4,4);c.fillRect(10,-5,4,4);c.restore();}
  floorMess(){
   const g=this.game,c=this.ctx;for(const m of g.messes){const spread=this.reduced?1:Math.min(1,m.age*5),width=m.size*(.6+spread*.4),yy=g.height-7+Math.sin(m.seed)*6;c.save();c.translate(m.x,yy);c.fillStyle=m.gold?'#725329':'#382417';c.beginPath();c.ellipse(0,3,width+4,8+spread*3,0,0,Math.PI*2);c.fill();
@@ -159,9 +160,9 @@ export class Renderer {
   if(v>5.1&&!this.reduced){const age=v-5.1;for(let i=0;i<58;i++){c.fillStyle=['#f7da88','#ff947c','#e8e9dc','#c5ea7c'][i%4];const y=(age*(60+i%5*12)+i*37)%(this.viewHeight+90)-50;c.save();c.translate((i*83+Math.sin(age*2+i)*20)%W,y);c.rotate(age*(i%2?1:-1));c.fillRect(-2,-4,4,8);c.restore();}}
  }
  paint(dt,t){
-  const g=this.game,c=this.ctx,h=g.height;c.setTransform(this.dpr,0,0,this.dpr,0,0);c.imageSmoothingEnabled=false;c.clearRect(0,0,W,this.viewHeight);c.fillStyle='#101829';c.fillRect(0,0,W,this.viewHeight);if(!this.ready)return;if(g.state==='victory'){this.finale(dt,t);return;}if(g.state==='promoted'){drawElevator(this,dt,t);return;}if(g.state==='gameover'){drawFailure(this,dt,t);return;}
+  const g=this.game,c=this.ctx,h=g.height;c.setTransform(this.dpr,0,0,this.dpr,0,0);c.imageSmoothingEnabled=false;c.clearRect(0,0,W,this.viewHeight);c.fillStyle='#101829';c.fillRect(0,0,W,this.viewHeight);if(!this.ready)return;if(g.state==='victory'){this.finale(dt,t);return;}if(g.state==='promoted'){drawElevator(this,dt,t);return;}if(g.state==='gameover'){if(g.mode==='challenge')drawInboxFailure(this,dt,t);else drawFailure(this,dt,t);return;}
   this.office(dt,t);this.floorMess();this.reviewZones(t);this.boss(t);
-  for(const d of g.drops){if(d.type==='file')this.file({...d,rotation:d.rotation+Math.sin(t*4+d.phase)*.13});else if(d.type==='money')this.money(d);else this.sprite(d.type,d.x,d.y,32,30,d.rotation);}
+  for(const d of g.drops){if(d.type==='email')this.email({...d,rotation:d.rotation+Math.sin(t*4+d.phase)*.13});else if(d.type==='money')this.money(d);else this.sprite(d.type,d.x,d.y,32,30,d.rotation);}
   for(const shot of g.shots)this.sprite('poop',shot.x,shot.y,42,39,shot.t*9);
   let px=g.x,py=h-65;if(g.state==='victory'){const lift=Math.max(0,Math.min(1,(g.victoryTime-.6)/1.4)),eased=1-Math.pow(1-lift,3);px=g.x+(W/2-g.x)*eased;py=h-65-(h-112)*eased;}
   c.fillStyle='#070b2050';c.beginPath();c.ellipse(px,h-13,30,6,0,0,Math.PI*2);c.fill();

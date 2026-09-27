@@ -7,13 +7,13 @@ import {managerReleasePoint} from '../../static/play/eat-the-boss/manager-animat
 
 test('cash pickups heal up to three hearts and emit a payday event',()=>{
  const g=new Game();g.start(2);g.lives=1;g.catchDrop({type:'money',x:g.x,y:g.catchY});assert.equal(g.lives,2);assert.equal(g.quota,0);assert.equal(g.events.at(-1).type,'money');assert.match(g.events.at(-1).text,/PAYDAY/);g.catchDrop({type:'money',x:g.x,y:g.catchY});g.catchDrop({type:'money',x:g.x,y:g.catchY});assert.equal(g.lives,3);
- const spawned=new Set();for(let n=0;n<1000;n++){g.random=()=>n/1000;g.pendingDrop=null;g.spawn();spawned.add(g.pendingDrop.type);}assert.deepEqual([...spawned].sort(),['file','gold','money','poop']);
+ const spawned=new Set();for(let n=0;n<1000;n++){g.random=()=>n/1000;g.pendingDrop=null;g.spawn();spawned.add(g.pendingDrop.type);}assert.deepEqual([...spawned].sort(),['email','gold','money','poop']);
 });
 
 test('the sole middle manager supplies every drop and receives the counterattack',()=>{
  for(const floor of [4,9,14]){
   const g=new Game(()=>.6);g.start(floor);g.review.phase='open';g.review.timer=50;g.bossX=470;g.managerX=180;
-  for(const type of ['poop','gold','money','file']){g.pendingDrop={type,vx:0,speed:250};g.releaseThrow();const origin=managerReleasePoint(g.review.sprite,type);assert.equal(g.drops.at(-1).x,180+origin.x);assert.equal(g.drops.at(-1).y,101+origin.y);}
+  for(const type of ['poop','gold','money','email']){g.pendingDrop={type,vx:0,speed:250};g.releaseThrow();const origin=managerReleasePoint(g.review.sprite,type);assert.equal(g.drops.at(-1).x,180+origin.x);assert.equal(g.drops.at(-1).y,101+origin.y);}
   g.drops=[];g.pendingDrop={type:'poop',vx:0,speed:250};g.windup=.4;g.update(.02);assert.equal(g.managerX,180,'thrower stays planted during anticipation');
   let managerCalls=0;Renderer.prototype.boss.call({game:g,manager(){managerCalls++;},sprite(){assert.fail('Main boss must not be rendered during a middle-manager fight');}},0);assert.equal(managerCalls,1);
   g.quota=g.review.charge;g.throwBack();g.update(.04);assert.ok(g.shots[0].x<W/2,'counterattack heads toward the manager on the left');

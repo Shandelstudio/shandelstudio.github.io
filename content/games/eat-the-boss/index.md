@@ -2,7 +2,7 @@
 title: "Eat the Boss's shit to promote"
 description: "A browser arcade game: climb 20 corporate floors, survive the managers, and take the boss's chair."
 catalogImage: "screenshots/cash-gameplay.png"
-catalogImageAlt: "The employee catching cash and dodging files in an office"
+catalogImageAlt: "The employee catching cash and dodging office hazards in an office"
 catalogPlatform: "Browser"
 catalogSummary: "Climb 20 corporate floors, survive the managers, and claim the boss's chair."
 date: 2026-09-14
@@ -16,7 +16,7 @@ showTaxonomies: false
 showBreadcrumbs: true
 ---
 
-A corporate ladder with a filthy catch. Start at the bottom, catch what the boss drops, dodge red files, and work your way through 20 promotions. Face managers on floors 5, 10 and 15, then beat the boss to claim the corner office.
+A corporate ladder with a filthy catch. Start at the bottom, catch what the boss drops, dodge emails, and work your way through 20 promotions. Face managers on floors 5, 10 and 15, then beat the boss to claim the corner office.
 
 {{< button href="/play/eat-the-boss/" >}}Play in browser{{< /button >}}
 
@@ -29,7 +29,11 @@ A corporate ladder with a filthy catch. Start at the bottom, catch what the boss
 ## How to play
 
 - **Move:** slide your finger anywhere on the scene, or use the arrow keys / A and D.
-- **Catch and dodge:** poop earns points, gold is worth three, cash restores a heart, and red files cost a life.
+- **Catch and dodge:** poop earns points, gold is worth three, cash restores a heart, and emails cost a life.
 - **Beat the managers:** dodge their attacks and catch during openings to counterattack automatically.
 
 P or Esc pauses on a keyboard. Progress saves in this browser on this device. Sound starts when you press Play.
+
+## Email Overload challenge
+
+Choose **Challenge** on the start screen to enter an endless email storm. Dodge the boss’s emails with three hearts as the speed and volume rise. Your survival time and personal best are saved separately from career progress on this browser.
