@@ -21,7 +21,7 @@ export function managerPose(game,reduced=false){
  const b=game.review,type=game.pendingDrop?.type??game.releaseType,poop=type==='poop'||type==='gold';
  let pose={arm:0,torso:0,crouch:0},held=null,action='idle';
  if(b.phase==='warning'){
-  pose=throwing(clamp(1-b.timer/b.warningTime));held='file';action='warning';
+  pose=throwing(clamp(1-b.timer/b.warningTime));held='email';action='warning';
  }else if(b.phase==='attack'){
   pose=followThrough(clamp((b.attack-b.timer)/.46));action='attack';
  }else if(game.pendingDrop){

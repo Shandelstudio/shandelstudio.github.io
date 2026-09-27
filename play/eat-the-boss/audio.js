@@ -16,12 +16,14 @@ export class GameAudio {
   this.hiss(at,.026,.022,7500,true);this.next+=beat;this.step++;
  }}
  effect(type){if(!this.ctx||this.ctx.state!=='running'||this.muted)return;const t=this.ctx.currentTime;
+  if(type==='challengeTick'){this.tone(660,t,.09,.06,'sine');return;}
+  if(type==='challengeGo'){this.tone(880,t,.16,.07,'sine');this.tone(1320,t+.08,.18,.04,'sine');return;}
   if(type==='splat'){this.tone(105,t,.16,.07,'sine',false,31);this.hiss(t,.17,.055,430);return;}
   if(type==='elevatorClose'){this.hiss(t,.42,.035,950);this.tone(68,t,.5,.04,'triangle',false,88);return;}
   if(type==='elevatorDing'){this.tone(880,t,.35,.07,'sine');this.tone(1175,t+.12,.5,.04,'sine');return;}
   if(type==='fired'){this.hiss(t,.16,.1,600);this.tone(140,t,.25,.08,'triangle',false,35);return;}
   if(type==='poop'||type==='goldRelease'){this.tone(115,t,.13,.075,'sawtooth',false,47);this.tone(78,t+.065,.14,.06,'triangle',false,35);this.hiss(t,.11,.035,260);return;}
-  if(type==='file'){this.hiss(t,.18,.1,2800);return;}
+  if(type==='email'){this.hiss(t,.18,.1,2800);return;}
   if(type==='moneyRelease'){this.tone(410,t,.15,.05,'sine',false,180);return;}
   if(type==='catch'){this.tone(160,t,.09,.08,'sine',false,480);this.tone(640,t+.065,.07,.035,'triangle',false,310);return;}
   if(type==='attack'){this.hiss(t,.22,.16,850);this.tone(125,t,.22,.1,'triangle',false,38);return;}
